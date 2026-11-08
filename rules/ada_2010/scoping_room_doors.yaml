@@ -1,0 +1,25 @@
+id: ada2010.scoping.room-doors
+kind: scoping
+code: "2010 ADA Standards"
+edition: "2010"
+section: "206.5.2"
+title: "Doors serving rooms and spaces"
+paraphrase: "At least one door or doorway serving each room or space must meet the door requirements."
+check: doors_serving_rooms
+applicability:
+  facility_type: [public_accommodation, commercial_facility, state_local_government]
+selection:
+  element: opening
+  filter: {kind: [door, opening]}
+quote: "Within a building or facility, at least one door, doorway, or gate serving each room or space complying with these requirements shall comply with 404."
+source_url: "https://www.ada.gov/law-and-regs/design-standards/2010-stds/"
+source_text: ada_2010/2010-ada-standards.txt
+jurisdiction: null
+# Mandatory for construction starting on or after this date; the snapshot's Title II and
+# Title III regulation text says so ("on or after March 15, 2012 ... shall comply with
+# the 2010 Standards"). Earlier work could use the 1991 Standards.
+effective_date: 2012-03-15
+superseded_date: null
+amends: null
+verified_by: "Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot"
+status: verified

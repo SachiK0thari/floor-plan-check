@@ -1,0 +1,33 @@
+id: ada2010.accessible-route
+kind: technical
+code: "2010 ADA Standards"
+edition: "2010"
+section: "206.2.4"
+title: "Accessible route to spaces"
+paraphrase: "At least one accessible route must connect accessible entrances with all accessible spaces in the building."
+check: accessible_route_exists
+applicability:
+  facility_type: [public_accommodation, commercial_facility, state_local_government]
+selection:
+  element: room
+quote: "At least one accessible route shall connect accessible building or facility entrances with all accessible spaces and elements within the building or facility which are otherwise connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7."
+exceptions:
+  - id: listed-exceptions
+    paraphrase: "Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery rooms."
+    handling: surfaced
+    quote: "unless exempted by 206.2.3 Exceptions 1 through 7."
+  - id: level-changes
+    paraphrase: "A route on plan is not proof of an accessible route: steps, slopes, and thresholds are not visible on a floor plan."
+    handling: surfaced
+proves: fail_only
+source_url: "https://www.ada.gov/law-and-regs/design-standards/2010-stds/"
+source_text: ada_2010/2010-ada-standards.txt
+jurisdiction: null
+# Mandatory for construction starting on or after this date; the snapshot's Title II and
+# Title III regulation text says so ("on or after March 15, 2012 ... shall comply with
+# the 2010 Standards"). Earlier work could use the 1991 Standards.
+effective_date: 2012-03-15
+superseded_date: null
+amends: null
+verified_by: "Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot"
+status: verified

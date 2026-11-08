@@ -1,0 +1,42 @@
+{
+ "result": {
+  "addressMatches": [
+   {
+    "matchedAddress": "200 S SPRING ST, LOS ANGELES, CA, 90012",
+    "coordinates": {
+     "x": -118.245593523439,
+     "y": 34.051622610747
+    },
+    "geographies": {
+     "States": [
+      {
+       "GEOID": "06",
+       "NAME": "California",
+       "BASENAME": "California",
+       "LSADC": "00",
+       "FUNCSTAT": "A"
+      }
+     ],
+     "Incorporated Places": [
+      {
+       "GEOID": "0644000",
+       "NAME": "Los Angeles city",
+       "BASENAME": "Los Angeles",
+       "LSADC": "25",
+       "FUNCSTAT": "A"
+      }
+     ],
+     "Counties": [
+      {
+       "GEOID": "06037",
+       "NAME": "Los Angeles County",
+       "BASENAME": "Los Angeles",
+       "LSADC": "06",
+       "FUNCSTAT": "A"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

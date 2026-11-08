@@ -1,0 +1,33 @@
+{
+ "result": {
+  "addressMatches": [
+   {
+    "matchedAddress": "4801 E 3RD ST, LOS ANGELES, CA, 90022",
+    "coordinates": {
+     "x": -118.160843082858,
+     "y": 34.033421039563
+    },
+    "geographies": {
+     "States": [
+      {
+       "GEOID": "06",
+       "NAME": "California",
+       "BASENAME": "California",
+       "LSADC": "00",
+       "FUNCSTAT": "A"
+      }
+     ],
+     "Counties": [
+      {
+       "GEOID": "06037",
+       "NAME": "Los Angeles County",
+       "BASENAME": "Los Angeles",
+       "LSADC": "06",
+       "FUNCSTAT": "A"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

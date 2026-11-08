@@ -1,0 +1,13 @@
+# The single decision rule (docs/PROJECT_SPEC.md §9.3).
+# pass if value - k*sigma >= limit; fail if value + k*sigma < limit; otherwise borderline.
+guard_factor_k: 2
+
+# Clear-width deduction per door operation type (§8.1 step 4): how much narrower the
+# clear opening is than the leaf. AUTHOR FILLS THESE IN (milestone M4) from door and
+# frame details; they are hardware assumptions, not code requirements. Null = not set.
+clear_width_deduction:
+  swing: {value: null, sigma: null, unit: mm}
+  double_swing: {value: null, sigma: null, unit: mm}
+  sliding: {value: null, sigma: null, unit: mm}
+  pocket: {value: null, sigma: null, unit: mm}
+  folding: {value: null, sigma: null, unit: mm}

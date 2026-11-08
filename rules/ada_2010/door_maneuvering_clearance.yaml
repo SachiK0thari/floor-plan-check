@@ -1,0 +1,58 @@
+id: ada2010.door-maneuvering-clearance
+kind: technical
+code: "2010 ADA Standards"
+edition: "2010"
+section: "404.2.4.1"
+title: "Maneuvering clearance at swinging doors (front approach)"
+paraphrase: "A swinging door needs clear floor space in front of it, and beside the latch on the pull side. The tool checks the front-approach row of the table."
+check: door_maneuvering_clearance
+applicability:
+  facility_type: [public_accommodation, commercial_facility, state_local_government]
+selection:
+  element: opening
+  filter: {kind: [door], operation: [swing, double_swing]}
+  obligated_by: [ada2010.scoping.room-doors, ada2010.scoping.entrances]
+requirement:
+  pull_perpendicular:
+    value: 60
+    unit: in
+    quote: "| From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)"
+  pull_beyond_latch:
+    value: 18
+    unit: in
+    quote: "| From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)"
+  push_perpendicular:
+    value: 48
+    unit: in
+    quote: "| From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)"
+  push_beyond_latch:
+    value: 0
+    unit: in
+    quote: "| From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)"
+exceptions:
+  - id: closer-and-latch
+    paraphrase: "On the push side, extra latch-side clearance is needed when the door has both a closer and a latch. A plan does not show hardware."
+    handling: surfaced
+    quote: "| From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)"
+    params:
+      push_beyond_latch_added: {value: 12, unit: in, quote: "(Add 12 inches (305 mm) if closer and latch are provided.)"}
+  - id: other-approach
+    paraphrase: "The table has different clearances for approach from the hinge side or the latch side. The tool assumes a front approach, so a door that fails here may comply for a side approach."
+    handling: surfaced
+  - id: hospital-patient-room
+    paraphrase: "Entry doors to hospital patient rooms do not need the clearance beyond the latch side."
+    handling: surfaced
+    section: "404.2.4"
+    quote: "Entry doors to hospital patient rooms shall not be required to provide the clearance beyond the latch side of the door."
+proves: fail_only
+source_url: "https://www.ada.gov/law-and-regs/design-standards/2010-stds/"
+source_text: ada_2010/2010-ada-standards.txt
+jurisdiction: null
+# Mandatory for construction starting on or after this date; the snapshot's Title II and
+# Title III regulation text says so ("on or after March 15, 2012 ... shall comply with
+# the 2010 Standards"). Earlier work could use the 1991 Standards.
+effective_date: 2012-03-15
+superseded_date: null
+amends: null
+verified_by: "Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot"
+status: verified

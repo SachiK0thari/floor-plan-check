@@ -1,0 +1,42 @@
+{
+ "result": {
+  "addressMatches": [
+   {
+    "matchedAddress": "1600 PENNSYLVANIA AVE NW, WASHINGTON, DC, 20500",
+    "coordinates": {
+     "x": -77.035189204737,
+     "y": 38.898702605245
+    },
+    "geographies": {
+     "States": [
+      {
+       "GEOID": "11",
+       "NAME": "District of Columbia",
+       "BASENAME": "District of Columbia",
+       "LSADC": "00",
+       "FUNCSTAT": "A"
+      }
+     ],
+     "Incorporated Places": [
+      {
+       "GEOID": "1150000",
+       "NAME": "Washington city",
+       "BASENAME": "Washington",
+       "LSADC": "25",
+       "FUNCSTAT": "N"
+      }
+     ],
+     "Counties": [
+      {
+       "GEOID": "11001",
+       "NAME": "District of Columbia",
+       "BASENAME": "District of Columbia",
+       "LSADC": "00",
+       "FUNCSTAT": "F"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

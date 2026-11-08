@@ -1,0 +1,11 @@
+# Nominal door leaf sizes per drawing region (docs/PROJECT_SPEC.md §8.1 step 4).
+# These are catalog sizes, not code requirements. The author confirms each list
+# against a door manufacturer's catalog before it is used for snapping (milestone M4).
+us_nominal:
+  status: draft
+  unit: in
+  leaf_widths: [24, 28, 30, 32, 34, 36]   # 2'-0" to 3'-0", as listed in the spec
+metric_module:
+  status: draft
+  unit: mm
+  leaf_widths: [700, 800, 900, 1000]      # 100 mm modules

@@ -1,0 +1,8 @@
+# Element type -> DXF layer name. Shared by the DXF exporter (M1) and importer (M2.5).
+# Defaults follow the AIA CAD Layer Guidelines / U.S. National CAD Standard naming.
+wall: A-WALL
+door: A-DOOR
+window: A-GLAZ
+room_outline: A-AREA
+room_label: A-AREA-IDEN
+dimension: A-ANNO-DIMS

@@ -1,0 +1,44 @@
+id: ada2010.walking-surface-clear-width
+kind: technical
+code: "2010 ADA Standards"
+edition: "2010"
+section: "403.5.1"
+title: "Clear width of walking surfaces"
+paraphrase: "A walking surface on an accessible route needs a minimum clear width, with a short narrower stretch allowed."
+check: corridor_min_width
+applicability:
+  facility_type: [public_accommodation, commercial_facility, state_local_government]
+selection:
+  element: room
+  filter: {room_type: [corridor]}
+requirement:
+  min_clear_width:
+    value: 36
+    unit: in
+    quote: "the clear width of walking surfaces shall be 36 inches (915 mm) minimum."
+exceptions:
+  - id: short-reduction
+    paraphrase: "The width may drop to a smaller value for a short length, if the narrow stretches are far enough apart."
+    handling: checked
+    quote: "The clear width shall be permitted to be reduced to 32 inches (815 mm) minimum for a length of 24 inches (610 mm) maximum provided that reduced width segments are separated by segments that are 48 inches (1220 mm) long minimum and 36 inches (915 mm) wide minimum."
+    params:
+      reduced_width: {value: 32, unit: in, quote: "reduced to 32 inches (815 mm) minimum"}
+      max_length: {value: 24, unit: in, quote: "for a length of 24 inches (610 mm) maximum"}
+      separation_length: {value: 48, unit: in, quote: "separated by segments that are 48 inches (1220 mm) long minimum"}
+      separation_width: {value: 36, unit: in, quote: "48 inches (1220 mm) long minimum and 36 inches (915 mm) wide minimum"}
+  - id: turns-and-passing
+    paraphrase: "Sections 403.5.2 and 403.5.3 set other widths at 180-degree turns and require passing spaces on long narrow routes. The tool does not check them."
+    handling: surfaced
+    quote: "Except as provided in 403.5.2 and 403.5.3"
+proves: both
+source_url: "https://www.ada.gov/law-and-regs/design-standards/2010-stds/"
+source_text: ada_2010/2010-ada-standards.txt
+jurisdiction: null
+# Mandatory for construction starting on or after this date; the snapshot's Title II and
+# Title III regulation text says so ("on or after March 15, 2012 ... shall comply with
+# the 2010 Standards"). Earlier work could use the 1991 Standards.
+effective_date: 2012-03-15
+superseded_date: null
+amends: null
+verified_by: "Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot"
+status: verified

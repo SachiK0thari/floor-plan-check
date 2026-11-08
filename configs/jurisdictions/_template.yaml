@@ -1,0 +1,24 @@
+# Adoption record for one jurisdiction (docs/PROJECT_SPEC.md §3.2).
+# Copy to <slug>.yaml and fill in. Files starting with "_" are not loaded.
+#
+# Every value comes from the jurisdiction's own official source and is verified against
+# it. Nothing here may be guessed. A record with a null adoption fact is listed but its
+# local ruleset does not run.
+
+name: null               # e.g. "City of Example"
+slug: null               # short id; also the folder name under rules/local/
+
+# Which government this is, as the U.S. Census identifies it. The address lookup matches
+# a site to a record through these two fields.
+level: null              # state | county | place
+geoid: null              # Census GEOID: 2 digits for a state, 5 for a county, 7 for a place
+
+parent: null             # slug of the state (or county) record whose code this one amends
+
+base_code: null          # the model code the jurisdiction adopted
+base_edition: null       # the edition it adopted
+effective_date: null     # YYYY-MM-DD the adoption took effect
+adopting_reference: null # ordinance or statute number
+source_url: null         # official page for the adoption
+retrieved_on: null       # YYYY-MM-DD the source was read
+verified_by: null        # who checked it against the source, and when

@@ -1,0 +1,14 @@
+# Room label text (upper-cased) -> room_type. Extended as new labels are met (M4, M5).
+BATH: bathroom
+WC: bathroom
+TOILET: bathroom
+RESTROOM: bathroom
+OFFICE: office
+MEETING: meeting_room
+RECEPTION: reception
+STORAGE: storage
+BREAK ROOM: break_room
+CORRIDOR: corridor
+HALL: corridor
+HALLWAY: corridor
+BATHROOM: bathroom

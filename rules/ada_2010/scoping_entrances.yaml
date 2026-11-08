@@ -1,0 +1,37 @@
+id: ada2010.scoping.entrances
+kind: scoping
+code: "2010 ADA Standards"
+edition: "2010"
+section: "206.4.1"
+title: "Public entrances"
+paraphrase: "A minimum share of public entrances must meet the door requirements."
+check: entrance_doors
+applicability:
+  facility_type: [public_accommodation, commercial_facility, state_local_government]
+selection:
+  element: opening
+  filter: {kind: [door, opening], exterior: true}
+requirement:
+  min_share:
+    value: 60
+    unit: percent
+    quote: "at least 60 percent of all public entrances shall comply with 404."
+exceptions:
+  - id: not-a-public-entrance
+    paraphrase: "Only public entrances count. A plan does not say which exterior doors are public entrances, so the tool counts every exterior door; service doors may be excluded on review."
+    handling: surfaced
+  - id: other-entrance-types
+    paraphrase: "Sections 206.4.2 through 206.4.9 add separate requirements for particular entrance types (parking structures, tunnels, transportation facilities, tenant spaces, and others). The tool does not check them."
+    handling: surfaced
+    quote: "In addition to entrances required by 206.4.2 through 206.4.9"
+source_url: "https://www.ada.gov/law-and-regs/design-standards/2010-stds/"
+source_text: ada_2010/2010-ada-standards.txt
+jurisdiction: null
+# Mandatory for construction starting on or after this date; the snapshot's Title II and
+# Title III regulation text says so ("on or after March 15, 2012 ... shall comply with
+# the 2010 Standards"). Earlier work could use the 1991 Standards.
+effective_date: 2012-03-15
+superseded_date: null
+amends: null
+verified_by: "Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot"
+status: verified

@@ -1,0 +1,68 @@
+id: ada2010.toilet-room-turning-space
+kind: technical
+code: "2010 ADA Standards"
+edition: "2010"
+section: "603.2.1"
+title: "Turning space in toilet and bathing rooms"
+paraphrase: "A toilet or bathing room needs a turning space inside the room: a circle, or a T-shaped space."
+check: turning_space
+applicability:
+  facility_type: [public_accommodation, commercial_facility, state_local_government]
+selection:
+  element: room
+  filter: {room_type: [bathroom]}
+quote: "Turning space complying with 304 shall be provided within the room."
+requirement:
+  circle_diameter:
+    value: 60
+    unit: in
+    section: "304.3.1"
+    quote: "The turning space shall be a space of 60 inches (1525 mm) diameter minimum."
+  t_square:
+    value: 60
+    unit: in
+    section: "304.3.2"
+    quote: "The turning space shall be a T-shaped space within a 60 inch (1525 mm) square minimum with arms and base 36 inches (915 mm) wide minimum."
+  t_width:
+    value: 36
+    unit: in
+    section: "304.3.2"
+    quote: "The turning space shall be a T-shaped space within a 60 inch (1525 mm) square minimum with arms and base 36 inches (915 mm) wide minimum."
+  t_arm_clear:
+    value: 12
+    unit: in
+    section: "304.3.2"
+    quote: "Each arm of the T shall be clear of obstructions 12 inches (305 mm) minimum in each direction and the base shall be clear of obstructions 24 inches (610 mm) minimum."
+  t_base_clear:
+    value: 24
+    unit: in
+    section: "304.3.2"
+    quote: "Each arm of the T shall be clear of obstructions 12 inches (305 mm) minimum in each direction and the base shall be clear of obstructions 24 inches (610 mm) minimum."
+exceptions:
+  - id: knee-and-toe-clearance
+    paraphrase: "The turning space may extend under fixtures that provide knee and toe clearance. The tool does not model fixtures in section, so it cannot credit this."
+    handling: surfaced
+    section: "304.3.1"
+    quote: "The space shall be permitted to include knee and toe clearance complying with 306."
+  - id: door-swing
+    paraphrase: "Doors may swing into the turning space, so door swings are not subtracted from the room."
+    handling: checked
+    section: "304.4"
+    quote: "Doors shall be permitted to swing into turning spaces."
+  - id: scoping-exceptions
+    paraphrase: "Section 213.2 exempts or reduces the requirement for some toilet rooms: certain alterations, qualified historic buildings, and clusters of single-user rooms."
+    handling: surfaced
+    section: "213.2"
+    quote: "Where toilet rooms are provided, each toilet room shall comply with 603."
+proves: fail_only
+source_url: "https://www.ada.gov/law-and-regs/design-standards/2010-stds/"
+source_text: ada_2010/2010-ada-standards.txt
+jurisdiction: null
+# Mandatory for construction starting on or after this date; the snapshot's Title II and
+# Title III regulation text says so ("on or after March 15, 2012 ... shall comply with
+# the 2010 Standards"). Earlier work could use the 1991 Standards.
+effective_date: 2012-03-15
+superseded_date: null
+amends: null
+verified_by: "Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot"
+status: verified

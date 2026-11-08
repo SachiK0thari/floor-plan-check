@@ -1,0 +1,48 @@
+id: ada2010.door-clear-width
+kind: technical
+code: "2010 ADA Standards"
+edition: "2010"
+section: "404.2.3"
+title: "Door clear width"
+paraphrase: "Door openings need a minimum clear width, measured between the face of the open door and the stop."
+check: opening_clear_width
+applicability:
+  facility_type: [public_accommodation, commercial_facility, state_local_government]
+selection:
+  element: opening
+  filter: {kind: [door, opening]}
+  obligated_by: [ada2010.scoping.room-doors, ada2010.scoping.entrances]
+requirement:
+  min_clear_width:
+    value: 32
+    unit: in
+    quote: "Door openings shall provide a clear width of 32 inches (815 mm) minimum."
+exceptions:
+  - id: deep-opening
+    paraphrase: "An opening deeper than a stated depth needs a larger clear width."
+    handling: checked
+    quote: "Openings more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum."
+    params:
+      depth: {value: 24, unit: in, quote: "Openings more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum."}
+      min_clear_width: {value: 36, unit: in, quote: "Openings more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum."}
+  - id: double-leaf
+    paraphrase: "For a doorway with two leaves, one active leaf must comply; the pair is not measured together."
+    handling: checked
+    section: "404.2.2"
+    quote: "At least one of the active leaves of doorways with two leaves shall comply with 404.2.3 and 404.2.4."
+  - id: alteration-latch-stop
+    paraphrase: "In alterations, the latch-side stop may project a small amount into the required clear width."
+    handling: surfaced
+    quote: "In alterations, a projection of 5/8 inch (16 mm) maximum into the required clear width shall be permitted for the latch side stop."
+proves: both
+source_url: "https://www.ada.gov/law-and-regs/design-standards/2010-stds/"
+source_text: ada_2010/2010-ada-standards.txt
+jurisdiction: null
+# Mandatory for construction starting on or after this date; the snapshot's Title II and
+# Title III regulation text says so ("on or after March 15, 2012 ... shall comply with
+# the 2010 Standards"). Earlier work could use the 1991 Standards.
+effective_date: 2012-03-15
+superseded_date: null
+amends: null
+verified_by: "Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot"
+status: verified
