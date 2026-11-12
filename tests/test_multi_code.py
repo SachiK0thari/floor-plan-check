@@ -58,6 +58,7 @@ def records() -> list[AdoptionRecord]:
         AdoptionRecord(
             name="Synthetic authority (not a real adoption)",
             slug=SLUG,
+            country="US",
             level="place",
             geoid="TEST",
             base_code=CODE,

@@ -8,10 +8,14 @@
 name: null               # e.g. "City of Example"
 slug: null               # short id; also the folder name under rules/local/
 
-# Which government this is, as the U.S. Census identifies it. The address lookup matches
-# a site to a record through these two fields.
-level: null              # state | county | place
-geoid: null              # Census GEOID: 2 digits for a state, 5 for a county, 7 for a place
+# Which government this is. Location lookup matches a site to a record by
+# (country, authority_id), the same way in every country.
+country: null            # ISO 3166-1 alpha-2 code, e.g. US, IN, NZ
+level: null              # the location provider's level, e.g. state | county | place | district
+authority_id: null       # stable identifier, unique within the country; scheme-prefixed
+                         # (U.S.: census:<level>:<geoid>, or give geoid below instead)
+geoid: null              # U.S. only: Census GEOID, 2 digits for a state, 5 for a county,
+                         # 7 for a place. Leave null outside the U.S.
 
 parent: null             # slug of the state (or county) record whose code this one amends
 
