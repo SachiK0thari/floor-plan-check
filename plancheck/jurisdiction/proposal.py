@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-import re
 from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from plancheck.jurisdiction.location_evidence import LocationExtraction
-from plancheck.jurisdiction.resolve import AdoptionRecord
-
-
-def normalized(value: str) -> str:
-    return re.sub(r"\W+", " ", value.casefold()).strip()
+from plancheck.jurisdiction.resolve import AdoptionRecord, records_named
+from plancheck.jurisdiction.resolve import normalized_name as normalized
 
 
 class ProjectSettings(BaseModel):
@@ -62,13 +58,7 @@ def propose(extraction: LocationExtraction, records: list[AdoptionRecord]) -> Pr
     )
     # City and generic jurisdiction labels never establish an authority. Country is
     # mandatory to prevent same-name matches across national boundaries.
-    matches = [
-        r.slug
-        for r in records
-        if settings.country == r.country
-        and settings.authority
-        and normalized(r.name) == normalized(settings.authority)
-    ]
+    matches = [r.slug for r in records_named(settings.country, settings.authority, records)]
     return Proposal(
         settings=settings,
         matched_slugs=matches,
@@ -87,11 +77,7 @@ def propose(extraction: LocationExtraction, records: list[AdoptionRecord]) -> Pr
 
 def availability(settings: ProjectSettings, records: list[AdoptionRecord]) -> dict[str, object]:
     """Metadata only: this flow does not execute local compliance checks."""
-    matches = [
-        r
-        for r in records
-        if r.country == settings.country and normalized(r.name) == normalized(settings.authority)
-    ]
+    matches = records_named(settings.country, settings.authority, records)
     notes: list[str] = []
     chain: list[AdoptionRecord] = []
     if len(matches) == 1:

@@ -42,6 +42,7 @@ def record(slug: str, level: str, geoid: str, **overrides: Any) -> AdoptionRecor
     fields: dict[str, Any] = {
         "name": slug.title(),
         "slug": slug,
+        "country": "US",
         "level": level,
         "geoid": geoid,
         "base_code": "Test Code",
@@ -61,11 +62,14 @@ def record(slug: str, level: str, geoid: str, **overrides: Any) -> AdoptionRecor
 def test_address_inside_a_city() -> None:
     location = saved("city_hall_los_angeles")
     assert location is not None
-    assert (location.authority.level, location.authority.geoid) == ("place", "0644000")
+    assert location.country == "US"
+    assert location.authority.authority_id == "census:place:0644000"
     assert location.authority.name == "Los Angeles city"
-    assert location.county is not None
-    assert location.county.geoid == "06037"
-    assert location.state.geoid == "06"
+    assert [a.level for a in location.authorities] == ["state", "county", "place"]
+    county = location.at("county")
+    assert county is not None
+    assert county.authority_id == "census:county:06037"
+    assert location.root.authority_id == "census:state:06"
 
 
 def test_mailing_city_is_not_the_jurisdiction() -> None:
@@ -73,7 +77,7 @@ def test_mailing_city_is_not_the_jurisdiction() -> None:
     location = saved("east_la_civic_center")
     assert location is not None
     assert "LOS ANGELES" in location.matched_address
-    assert location.place is None
+    assert location.at("place") is None
     assert (location.authority.level, location.authority.name) == ("county", "Los Angeles County")
 
 
@@ -81,8 +85,7 @@ def test_boundaries_without_a_government_are_skipped() -> None:
     # Washington, DC has a "county" and a "place" on the map, neither with a government.
     location = saved("white_house")
     assert location is not None
-    assert location.place is None
-    assert location.county is None
+    assert [a.level for a in location.authorities] == ["state"]
     assert (location.authority.level, location.authority.name) == ("state", "District of Columbia")
 
 

@@ -1,4 +1,4 @@
-"""Address lookup with the U.S. Census Bureau geocoder.
+"""U.S. location provider: address lookup with the U.S. Census Bureau geocoder.
 
 The geocoder is a free public service that needs no key. It returns the state, county,
 and incorporated place whose boundaries contain an address, which is exactly the
@@ -14,13 +14,16 @@ import json
 import ssl
 import urllib.parse
 import urllib.request
-from typing import Any
+from typing import Any, Literal
 
 import truststore
 
-from plancheck.jurisdiction.resolve import Authority, Level, Location
+from plancheck.jurisdiction.resolve import Authority, Location, census_authority_id
+
+Level = Literal["state", "county", "place"]
 
 URL = "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress"
+SERVICE = "U.S. Census Bureau geocoder (geocoding.geo.census.gov)"
 _LAYERS: dict[str, Level] = {
     "States": "state",
     "Counties": "county",
@@ -41,20 +44,35 @@ def parse_response(payload: dict[str, Any]) -> Location | None:
             # Washington, DC shows why this matters: its "county" and "place" are
             # boundaries with no government of their own.
             if entry.get("FUNCSTAT") == _ACTIVE:
-                found[level] = Authority(level=level, geoid=entry["GEOID"], name=entry["NAME"])
+                found[level] = Authority(
+                    country="US",
+                    level=level,
+                    authority_id=census_authority_id(level, entry["GEOID"]),
+                    name=entry["NAME"],
+                )
                 break
     if "state" not in found:
         return None
+    authorities = [found[level] for level in ("state", "county", "place") if level in found]
+    notes = []
+    if "place" not in found:
+        notes.append(
+            f"The site is not inside an incorporated city, so {authorities[-1].name} is the "
+            "likely authority, even if the mailing address names a city."
+        )
     return Location(
+        country="US",
         matched_address=match["matchedAddress"],
-        state=found["state"],
-        county=found.get("county"),
-        place=found.get("place"),
+        authorities=authorities,
+        notes=notes,
     )
 
 
 class CensusGeocoder:
-    """Looks an address up over the network."""
+    """Looks a U.S. address up over the network."""
+
+    country = "US"
+    service = SERVICE
 
     def __init__(self, timeout_s: float = 30.0) -> None:
         self.timeout_s = timeout_s
