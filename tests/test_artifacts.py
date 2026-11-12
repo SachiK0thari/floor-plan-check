@@ -130,6 +130,7 @@ def test_amendment_sources_and_adoptions_are_self_contained(
     record = AdoptionRecord(
         name="Synthetic authority (test only)",
         slug=SLUG,
+        country="US",
         level="place",
         geoid="TEST",
         base_code=CODE,
