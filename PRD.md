@@ -8,7 +8,7 @@ Updated on November 12, 2026. Work through the milestones in order and meet each
 
 ## Product direction
 
-Decided by the author on November 12, 2026. Where this section goes beyond the specification, it is the newer intent; the specification must be updated to match before the affected milestone starts.
+Decided by the author on November 12, 2026. [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md) §1, §2, §3.2, §12, §13, §15 and §16 were updated to match on the same day; M10's detailed requirements are still to be added to the specification before M10 starts.
 
 1. **PlanCheck is a web application.** The user-facing product is the webpage: upload a plan, confirm where the building is, review findings, correct the model, and export. The Python package, command-line entry points and local JSON persistence are the engine and development scaffolding behind it, not a separate product.
 2. **The jurisdiction comes from the building's location, and no region is special.** The application works out the local jurisdiction in this order:
@@ -28,7 +28,7 @@ Decided by the author on November 12, 2026. Where this section goes beyond the s
 
 The project is partway through **M2: compliance on ground-truth models**. Reports, BCF, saved runs, multi-code handling, analytic validation, and a preliminary synthetic accuracy budget are implemented. A restricted exact-input demo now runs from semantic DXF and tagged vector PDF through checks and exports. The local webpage also saves source drawings and project revisions, runs explicitly selected ADA reference comparisons, and presents findings and downloads; OCR and local-code execution from the webpage remain pending. Author hand-checks, verified local rules, and the independent CAD evaluation set remain acceptance gaps; the synthetic demo does not close M2/M2.5.
 
-Latest local validation: 525 tests passed, including real semantic DXF/tagged-PDF runs and HTTP upload → check → download → stale-result rejection. Type checking, lint and formatting checks for changed Python files, and JavaScript syntax checks passed. A headless Chrome smoke check verified page/JavaScript loading and the initial disabled run button; the initial rendered layout was inspected. Full browser interaction testing and CI remain unverified. Earlier rule validation verified all seven ADA rule files against the stored source text.
+Latest local validation: 534 tests passed, including the jurisdiction-independence tests and real semantic DXF/tagged-PDF runs and HTTP upload → check → download → stale-result rejection. Type checking, lint and formatting checks for changed Python files, and JavaScript syntax checks passed. A headless Chrome smoke check verified page/JavaScript loading and the initial disabled run button; the initial rendered layout was inspected. Full browser interaction testing and CI remain unverified. Earlier rule validation verified all seven ADA rule files against the stored source text.
 
 ## Milestone status
 
@@ -50,9 +50,9 @@ Latest local validation: 525 tests passed, including real semantic DXF/tagged-PD
 - [x] Add the Python package, dependency lockfile, development tools, Make targets, and CI workflow.
 - [x] Pass lint, formatting, type checking, and tests locally.
 - [x] Create this `PRD.md` checklist to satisfy the README and specification references.
-- [ ] Review and commit the project files, which appeared untracked during the review.
-- [ ] Configure a GitHub remote and push the repository.
-- [ ] Confirm `make lint` and `make test` pass in CI on the configured Python versions.
+- [x] Review and commit the project files, which appeared untracked during the review.
+- [x] Configure a GitHub remote and push the repository.
+- [ ] Confirm `make lint` and `make test` pass in CI on the configured Python versions. Earlier CI runs failed because a global `*.txt` ignore had kept the ADA source snapshot out of Git; it is now committed (U.S. government work, marked storable) and a fresh clone passes locally.
 
 **Done when:** lint and tests pass in CI.
 
@@ -126,7 +126,7 @@ Latest local validation: 525 tests passed, including real semantic DXF/tagged-PD
    - [ ] Author fills and verifies the parameters; aim for the specification's initial 5–8 rules expressible by the check types.
    - [ ] Add any check types required by those rules, with known-answer tests.
    - [ ] Test local-code findings and cases where local requirements differ from ADA or an amended base rule.
-   - [ ] Keep the engine independent of the chosen jurisdiction: adding a second authority must need only a new adoption record and ruleset, with no code change. Test this with a second synthetic authority in a different country.
+   - [x] Keep the engine independent of the chosen jurisdiction: adding a second authority must need only a new adoption record and ruleset, with no code change. Tested with synthetic U.S. and New Zealand authorities added only as data (`tests/test_jurisdiction_independence.py`).
    - A region scaffold and one null-parameter draft exist for Maharashtra as a development example only. It is not the required first jurisdiction; if the author verifies a different authority first, the scaffold stays inactive. Should Maharashtra be pursued, the municipality/special authority and permit-date range are still needed; see [verification checklist](docs/maharashtra-verification.md). Synthetic multi-code tests do not establish real local requirements.
 
 8. **Generate the accuracy budget.**
@@ -197,8 +197,8 @@ The supported semantic DXF/tagged-PDF convention and synthetic demo reproduce ev
 - [ ] Preserve uncertainty through extraction and verdicts.
 - [x] Add local source-drawing/project persistence, project revisions and run snapshots for supported exact inputs. Reopening restores settings, evidence, drawings and current results; changing check inputs or drawings invalidates previous results.
 - [ ] Add production database persistence and editable building-model versions.
-- [ ] Put location-to-authority resolution behind one country-agnostic interface with a provider per country. The U.S. Census provider exists; each further provider needs an author-approved data source, licence and privacy review. A country with no provider falls back to the user naming the authority.
-- [ ] Finish generalizing adoption-record and persistence identifiers beyond Census level/GEOID, so an authority in any country is stored and matched the same way.
+- [x] Put location-to-authority resolution behind one country-agnostic interface with a provider per country (`LocationProvider`, `resolve_address`, `providers.py`). The U.S. Census provider exists; each further provider needs an author-approved data source, licence and privacy review. A country with no provider falls back to the user naming the authority. Not yet wired to the webpage (M7).
+- [x] Finish generalizing adoption-record and persistence identifiers beyond Census level/GEOID, so an authority in any country is stored and matched the same way. Records match on `country` + `authority_id`; a U.S. `geoid` is one form of it. Loading rejects duplicate authorities and cross-country chains. Saved projects store country and authority name, not Census identifiers.
 - [x] Implement local upload/text extraction, project listing/saving, explicit ADA reference check-run and export-download endpoints.
 - [x] Verify source hashes before checking, retain saved settings and engine/rule provenance, reject stale revisions/downloads, and remove partial outputs after failed runs.
 - [ ] Add asynchronous processing/status endpoints and the production API lifecycle; current local runs are synchronous.
