@@ -28,11 +28,11 @@ Decided by the author on November 12, 2026. [docs/PROJECT_SPEC.md](docs/PROJECT_
 
 The project is partway through **M2: compliance on ground-truth models**. Reports, BCF, saved runs, multi-code handling, analytic validation, and a preliminary synthetic accuracy budget are implemented. A restricted exact-input demo now runs from semantic DXF and tagged vector PDF through checks and exports. The local webpage also saves source drawings and project revisions, runs explicitly selected ADA reference comparisons, and presents findings and downloads; OCR and local-code execution from the webpage remain pending. Author hand-checks, verified local rules, and the independent CAD evaluation set remain acceptance gaps; the synthetic demo does not close M2/M2.5.
 
-Latest local validation: 534 tests passed, including the jurisdiction-independence tests and real semantic DXF/tagged-PDF runs and HTTP upload → check → download → stale-result rejection. Type checking, lint and formatting checks for changed Python files, and JavaScript syntax checks passed. A headless Chrome smoke check verified page/JavaScript loading and the initial disabled run button; the initial rendered layout was inspected. Full browser interaction testing and CI remain unverified. Earlier rule validation verified all seven ADA rule files against the stored source text.
+Latest local validation: 534 tests passed, including the jurisdiction-independence tests and real semantic DXF/tagged-PDF runs and HTTP upload → check → download → stale-result rejection. Type checking, lint and formatting checks for changed Python files, and JavaScript syntax checks passed. A headless Chrome smoke check verified page/JavaScript loading and the initial disabled run button; the initial rendered layout was inspected. Lint and tests pass in CI; full browser interaction testing remains unverified. Earlier rule validation verified all seven ADA rule files against the stored source text.
 
 ## Milestone status
 
-- [ ] M0 — Repository setup: local tooling works; repository tracking, remote, and CI remain.
+- [x] M0 — Repository setup: lint and tests pass in CI on Python 3.11 and 3.12 (PR #1).
 - [ ] M1 — Building model, exporters, and synthetic plans: implemented; external and visual validation remain.
 - [ ] M2 — Compliance engine: partly implemented; remaining tasks below.
 - [ ] M2.5 — Exact DXF/tagged-PDF paths and synthetic demo implemented; independent CAD-drawn test set and acceptance remain.
@@ -52,7 +52,7 @@ Latest local validation: 534 tests passed, including the jurisdiction-independen
 - [x] Create this `PRD.md` checklist to satisfy the README and specification references.
 - [x] Review and commit the project files, which appeared untracked during the review.
 - [x] Configure a GitHub remote and push the repository.
-- [ ] Confirm `make lint` and `make test` pass in CI on the configured Python versions. Earlier CI runs failed because a global `*.txt` ignore had kept the ADA source snapshot out of Git; it is now committed (U.S. government work, marked storable) and a fresh clone passes locally.
+- [x] Confirm `make lint` and `make test` pass in CI on the configured Python versions (PR #1, Python 3.11 and 3.12, November 12, 2026). Earlier CI runs failed because a global `*.txt` ignore had kept the ADA source snapshot out of Git; it is now committed (U.S. government work, marked storable) and a fresh clone passes locally.
 
 **Done when:** lint and tests pass in CI.
 
