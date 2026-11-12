@@ -1,0 +1,23 @@
+id: maharashtra.door-clear-width
+kind: technical
+code: Unverified Maharashtra provision — authority not selected
+edition: unverified
+section: unverified
+title: Door clear width — awaiting verified local source
+paraphrase: Placeholder only. The authority, applicable provision, and requirement must be verified by the author.
+check: opening_clear_width
+selection:
+  element: opening
+  filter: {kind: [door, opening]}
+requirement:
+  min_clear_width: {value: null, unit: mm}
+exceptions: []
+proves: both
+source_url: null
+source_text: null
+jurisdiction: maharashtra
+effective_date: null
+superseded_date: null
+amends: null
+verified_by: null
+status: draft

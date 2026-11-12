@@ -1,0 +1,62 @@
+schema_version: 1
+origin: synthetic analytic review fixtures; not independent CAD evaluation
+review_status: pending_author_review
+reviewed_by: null
+plans:
+  wide:
+    findings:
+      ada2010.door-clear-width:
+        D: pass
+      ada2010.accessible-route:
+        C: unknown
+      ada2010.door-maneuvering-clearance:
+        D: fail
+      ada2010.toilet-room-turning-space:
+        C: not_applicable
+      ada2010.walking-surface-clear-width:
+        C: pass
+    groups:
+      ada2010.door-clear-width:
+        room:C: pass
+        entrances: pass
+      ada2010.door-maneuvering-clearance:
+        room:C: fail
+        entrances: fail
+  narrow:
+    findings:
+      ada2010.door-clear-width:
+        D: fail
+      ada2010.accessible-route:
+        C: fail
+      ada2010.door-maneuvering-clearance:
+        D: fail
+      ada2010.toilet-room-turning-space:
+        C: not_applicable
+      ada2010.walking-surface-clear-width:
+        C: fail
+    groups:
+      ada2010.door-clear-width:
+        room:C: fail
+        entrances: fail
+      ada2010.door-maneuvering-clearance:
+        room:C: fail
+        entrances: fail
+  missing:
+    findings:
+      ada2010.door-clear-width:
+        D: unknown
+      ada2010.accessible-route:
+        C: unknown
+      ada2010.door-maneuvering-clearance:
+        D: unknown
+      ada2010.toilet-room-turning-space:
+        C: not_applicable
+      ada2010.walking-surface-clear-width:
+        C: not_applicable
+    groups:
+      ada2010.door-clear-width:
+        room:C: unknown
+        entrances: unknown
+      ada2010.door-maneuvering-clearance:
+        room:C: unknown
+        entrances: unknown

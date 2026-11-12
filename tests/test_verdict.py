@@ -155,3 +155,19 @@ def test_any_of(members: list[Verdict], expected: Verdict) -> None:
 )
 def test_at_least(count: int, members: list[Verdict], expected: Verdict) -> None:
     assert at_least(count, members) is expected
+
+
+@pytest.mark.parametrize(
+    ("count", "members", "expected"),
+    [
+        (1, [Verdict.NOT_APPLICABLE], Verdict.NOT_APPLICABLE),
+        (1, [Verdict.NOT_APPLICABLE, Verdict.UNKNOWN], Verdict.UNKNOWN),
+        (1, [Verdict.NOT_APPLICABLE, Verdict.PASS], Verdict.PASS),
+        (1, [], Verdict.FAIL),
+        (0, [], Verdict.PASS),
+    ],
+)
+def test_scoped_group_cardinality(count: int, members: list[Verdict], expected: Verdict) -> None:
+    from plancheck.compliance.verdict import scoped_at_least
+
+    assert scoped_at_least(count, members) is expected

@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "validator": "xmllint --nonet --noout --schema",
+  "validated_xml_documents": 82,
+  "archives": 6,
+  "schemas": [
+    {
+      "name": "markup.xsd",
+      "sha256": "15e9af22065870d93ad45431147748adc5b32ef830d6dfe7b4eb10cf5e6c4441",
+      "source_url": "https://raw.githubusercontent.com/buildingSMART/BCF-XML/release_2_1/Schemas/markup.xsd"
+    },
+    {
+      "name": "version.xsd",
+      "sha256": "bb1d108e349423fef4a69ecc1648797e7e73a18ee994bcdf98f978a6a3adf899",
+      "source_url": "https://raw.githubusercontent.com/buildingSMART/BCF-XML/release_2_1/Schemas/version.xsd"
+    },
+    {
+      "name": "visinfo.xsd",
+      "sha256": "ab11687511d9595fc136bcec57b4f640f0e8364d913f9b54c8dc267a13c6f247",
+      "source_url": "https://raw.githubusercontent.com/buildingSMART/BCF-XML/release_2_1/Schemas/visinfo.xsd"
+    }
+  ],
+  "limits": "Local schema and GUID validation; independent BCF/IFC viewer acceptance and buildingSMART IFC service validation remain pending.",
+  "verified_component_references": 38,
+  "verified_project_references": 38,
+  "engine_source_sha256": "48281c7b012b3e18b52cd7b23ccbe4e9830a0dfc4a91b34222bc17ded91e28dd"
+}

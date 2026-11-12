@@ -8,4 +8,4 @@ paraphrase, the numeric requirement, and a link (docs/PROJECT_SPEC.md §3).
 |---|---|---|---|---|
 | 2010 ADA Standards for Accessible Design | U.S. Department of Justice | U.S. government work | yes | Snapshot in `rules/sources/ada_2010/` (retrieved 2026-11-05, hashes in its SOURCE.md) |
 | International Building Code (any edition) | International Code Council | Copyrighted; free to view online | no | _author to confirm_ |
-| Local building code for the target jurisdiction | _TBD (configs/jurisdiction.yaml)_ | _TBD_ | no until confirmed | — |
+| Maharashtra local code — authority pending | See [verification checklist](maharashtra-verification.md) and `configs/jurisdictions/_maharashtra.yaml` | _author to verify source permissions_ | no until confirmed | No adopted rules verified |

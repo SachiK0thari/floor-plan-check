@@ -102,6 +102,18 @@ def all_of(verdicts: Iterable[Verdict]) -> Verdict:
     return at_least(len(members), members)
 
 
+def scoped_at_least(count: int, verdicts: Iterable[Verdict]) -> Verdict:
+    """An obligated group excluded entirely by technical selection is not applicable.
+
+    An actually empty obligation retains its cardinality: needing one door with no
+    doors fails, while needing zero passes. Unknown members remain unresolved.
+    """
+    members = list(verdicts)
+    if members and all(v is Verdict.NOT_APPLICABLE for v in members):
+        return Verdict.NOT_APPLICABLE
+    return at_least(count, members)
+
+
 def any_of(verdicts: Iterable[Verdict]) -> Verdict:
     """At least one member must pass (one compliant door per room)."""
     return at_least(1, verdicts)

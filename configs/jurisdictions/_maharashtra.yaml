@@ -1,0 +1,17 @@
+# Region selection only. Ignored until an authority-specific record is verified.
+# Do not rename/activate this as an adoption record merely to enable local checks.
+name: Maharashtra, India — authority selection pending
+slug: maharashtra
+country: IN
+level: state
+geoid: null
+# Application identifier for the region, not a Census GEOID or an adoption fact.
+authority_id: region:maharashtra
+parent: null
+base_code: null
+base_edition: null
+effective_date: null
+adopting_reference: null
+source_url: null
+retrieved_on: null
+verified_by: null

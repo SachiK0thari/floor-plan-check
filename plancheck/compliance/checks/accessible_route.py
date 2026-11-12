@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections import deque
 
 from plancheck.compliance.checks.opening_clear_width import opening_clear_width
-from plancheck.compliance.context import CheckContext
+from plancheck.compliance.context import CheckContext, connectivity_gaps
 from plancheck.compliance.results import CheckOutcome, Evidence
 from plancheck.compliance.rules import Rule
 from plancheck.compliance.verdict import Verdict, all_of
@@ -54,6 +54,13 @@ def accessible_route_exists(
 ) -> CheckOutcome:
     width_rule = ctx.door_rule
     surfaced = [e.id for e in rule.exceptions if e.handling == "surfaced"]
+    missing = connectivity_gaps(model)
+    if missing:
+        return CheckOutcome(
+            verdict=Verdict.UNKNOWN,
+            reason=f"room-graph connectivity missing for {missing}",
+            surfaced_exceptions=surfaced,
+        )
     if width_rule is None:
         return CheckOutcome(
             verdict=Verdict.UNKNOWN,

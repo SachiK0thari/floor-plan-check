@@ -73,7 +73,9 @@ class AdoptionRecord(_Base):
     name: str
     slug: str
     level: Level
-    geoid: str
+    geoid: str | None = None
+    country: str = "US"
+    authority_id: str | None = None
     parent: str | None = None
     base_code: str | None = None
     base_edition: str | None = None
@@ -95,7 +97,16 @@ class AdoptionRecord(_Base):
             "retrieved_on",
             "verified_by",
         )
-        return [name for name in required if getattr(self, name) is None]
+        missing = [
+            name
+            for name in required
+            if getattr(self, name) is None
+            or (isinstance(getattr(self, name), str) and not getattr(self, name).strip())
+        ]
+        identifier = "geoid" if self.country == "US" else "authority_id"
+        if not getattr(self, identifier):
+            missing.append(identifier)
+        return missing
 
 
 def load_adoption_records(folder: Path | None = None) -> list[AdoptionRecord]:
@@ -164,7 +175,11 @@ def resolve_jurisdiction(
         )
 
     by_slug = {record.slug: record for record in records}
-    by_key = {(record.level, record.geoid): record for record in records}
+    by_key = {
+        (record.level, record.geoid): record
+        for record in records
+        if record.country == "US" and record.geoid is not None
+    }
     record = by_key.get((authority.level, authority.geoid))
     # With no record for the local authority, a state record may still apply on its own.
     start = record or by_key.get(("state", location.state.geoid))

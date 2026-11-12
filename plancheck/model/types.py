@@ -20,6 +20,8 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 from shapely.geometry import Polygon
 
+from plancheck.jurisdiction.location_evidence import LocationExtraction
+
 EXTERIOR = "exterior"
 """Graph node id for the outside of the building."""
 
@@ -150,6 +152,8 @@ class Room(_Base):
     label: str | None = None
     room_type: str | None = None
     space_function: str | None = None
+    corridor_paths: list[list[Point]] = Field(default_factory=list)
+    """User/importer supplied travel paths covering every corridor arm, in millimetres."""
     confidence: Confidence = 1.0
     provenance: Provenance
 
@@ -238,6 +242,11 @@ class ProjectContext(_Base):
     results under an unconfirmed proposal are labelled provisional.
     """
 
+    country: str | None = None
+    region: str | None = None
+    city: str | None = None
+    planning_authority: str | None = None
+    ada_reference: bool = False
     site_address: str | None = None
     jurisdiction: str | None = None
     jurisdiction_source: Literal["user", "address_proposed", "address_confirmed"] | None = None
@@ -297,6 +306,7 @@ class BuildingModel(_Base):
     fixtures: list[Fixture] = Field(default_factory=list)
     dimensions: list[Dimension] = Field(default_factory=list)
     graph: RoomGraph = Field(default_factory=RoomGraph)
+    location_extraction: LocationExtraction | None = None
     warnings: list[str] = Field(default_factory=list)
     model_versions: dict[str, str] = Field(default_factory=dict)
 

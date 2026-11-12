@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from plancheck.compliance.context import CheckContext
-from plancheck.compliance.results import CheckOutcome, Evidence
+from plancheck.compliance.results import CheckOutcome, Evidence, MeasurementSemantics
 from plancheck.compliance.rules import Rule
 from plancheck.compliance.verdict import Verdict, decide_min
 from plancheck.model.geometry import opening_span
@@ -22,6 +22,31 @@ def opening_clear_width(
     wall = model.wall(opening.wall_id)
     evidence = [Evidence(kind="line", points=list(opening_span(wall, opening)), label=opening.id)]
     surfaced = [e.id for e in rule.exceptions if e.handling == "surfaced"]
+    conditions = [
+        e
+        for e in surfaced
+        if not (e == "alteration-latch-stop" and model.project.work_type == "new")
+    ]
+    conditions.extend(
+        e.id
+        for e in rule.exceptions
+        if e.handling == "checked" and e.id not in {"deep-opening", "double-leaf"}
+    )
+    deep = next((e for e in rule.exceptions if e.id == "deep-opening"), None)
+    if deep is not None and wall.thickness.sigma_mm > 0:
+        band = ctx.k * wall.thickness.sigma_mm
+        if (
+            wall.thickness.value_mm - band
+            <= deep.params["depth"].mm
+            < wall.thickness.value_mm + band
+        ):
+            conditions.append("uncertain deep-opening threshold")
+    semantics = MeasurementSemantics(
+        quantity="opening.clear_width",
+        relation="min",
+        basis="one_active_leaf" if opening.operation == "double_swing" else "clear_opening",
+        unresolved_conditions=conditions,
+    )
 
     measured, how = ctx.clear_width(opening)
     if measured is None:
@@ -30,6 +55,7 @@ def opening_clear_width(
             reason=how,
             surfaced_exceptions=surfaced,
             evidence=evidence,
+            semantics=semantics,
         )
 
     required = rule.requirement["min_clear_width"]
@@ -51,4 +77,5 @@ def opening_clear_width(
         reason="; ".join(notes),
         surfaced_exceptions=surfaced,
         evidence=evidence,
+        semantics=semantics,
     )

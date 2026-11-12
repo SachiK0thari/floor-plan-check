@@ -13,10 +13,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
+from typing import Literal
 
 import yaml
+from pydantic import BaseModel, ConfigDict
 
+from plancheck.compliance.applicability import Applies, applicability
 from plancheck.compliance.rules import Param, Rule
+from plancheck.compliance.verdict import Verdict
+from plancheck.model.types import ProjectContext
 
 RULES_DIR = Path(__file__).resolve().parent.parent.parent / "rules"
 PROTECTED_RULESETS = frozenset({"ada_2010"})
@@ -41,6 +46,37 @@ class LoadedRule:
     ruleset: str
     path: Path
     sha256: str
+
+
+class AmendmentRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    amending_rule: Rule
+    amended_rule: Rule
+    amending_ruleset: str
+    amended_ruleset: str
+    amending_sha256: str
+    amended_sha256: str
+    status: Literal["applied", "not_applicable", "unknown"]
+    reason: str
+
+
+def _amendment(
+    source: LoadedRule,
+    target: LoadedRule,
+    status: Literal["applied", "not_applicable", "unknown"],
+    reason: str,
+) -> AmendmentRecord:
+    return AmendmentRecord(
+        amending_rule=source.rule,
+        amended_rule=target.rule,
+        amending_ruleset=source.ruleset,
+        amended_ruleset=target.ruleset,
+        amending_sha256=source.sha256,
+        amended_sha256=target.sha256,
+        status=status,
+        reason=reason,
+    )
 
 
 def load_ruleset(name: str, rules_dir: Path | None = None) -> list[LoadedRule]:
@@ -136,6 +172,8 @@ class ResolvedRules:
     rules: list[LoadedRule] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)  # amendments applied, for the report
     not_runnable: list[tuple[str, str]] = field(default_factory=list)  # (rule id, reason)
+    source_rules: list[LoadedRule] = field(default_factory=list)
+    amendments: list[AmendmentRecord] = field(default_factory=list)
 
     def get(self, rule_id: str) -> LoadedRule:
         return next(r for r in self.rules if r.rule.id == rule_id)
@@ -148,6 +186,73 @@ class ResolvedRules:
     def fingerprint(self) -> list[tuple[str, str]]:
         """(rule id, file hash) pairs, stored with a check run so it can be reproduced."""
         return [(r.rule.id, r.sha256) for r in self.rules]
+
+    def for_project(
+        self, project: ProjectContext, local_status: dict[str, Applies] | None = None
+    ) -> ResolvedRules:
+        """Layer amendments only within their project applicability windows.
+
+        Unknown applicability blocks the target instead of silently reinstating it.
+        Original rules and citations remain in the amendment audit records.
+        """
+        if not self.source_rules:
+            return self
+        effective: dict[str, LoadedRule] = {}
+        originals = {r.rule.id: r for r in self.source_rules}
+        result = ResolvedRules(rulesets=list(self.rulesets), source_rules=self.source_rules)
+        for loaded in self.source_rules:
+            rule = loaded.rule
+            if rule.amends is None:
+                effective[rule.id] = loaded
+                continue
+            original = originals[rule.amends.rule]
+            target = effective.get(rule.amends.rule)
+            applies = applicability(rule, project)
+            if rule.jurisdiction is not None and local_status is not None:
+                local = local_status[rule.jurisdiction]
+                if (
+                    applies.status is not Verdict.NOT_APPLICABLE
+                    and local.status is not Verdict.PASS
+                ):
+                    applies = local
+            if applies.status is Verdict.NOT_APPLICABLE:
+                result.amendments.append(
+                    _amendment(
+                        loaded,
+                        original,
+                        "not_applicable",
+                        applies.reason or "amendment does not apply",
+                    )
+                )
+                continue
+            if target is None:
+                result.amendments.append(
+                    _amendment(
+                        loaded,
+                        original,
+                        "unknown",
+                        "amendment target is not active for this project",
+                    )
+                )
+                continue
+            del effective[target.rule.id]
+            if rule.amends.mode == "replace":
+                effective[rule.id] = loaded
+            if applies.status is Verdict.UNKNOWN:
+                result.amendments.append(
+                    _amendment(loaded, target, "unknown", applies.reason or "")
+                )
+            else:
+                note = f"{rule.id} {rule.amends.mode}s {target.rule.id} ({rule.code})"
+                result.notes.append(note)
+                result.amendments.append(_amendment(loaded, target, "applied", note))
+        result.rules = list(effective.values())
+        result.not_runnable = [
+            (r.rule.id, f"values not filled in: {r.rule.null_params()}")
+            for r in result.rules
+            if r.rule.null_params()
+        ]
+        return result
 
 
 def resolve(rulesets: Sequence[str], rules_dir: Path | None = None) -> ResolvedRules:
@@ -162,6 +267,7 @@ def resolve(rulesets: Sequence[str], rules_dir: Path | None = None) -> ResolvedR
     seen: set[str] = set()
     for name in rulesets:
         incoming = load_ruleset(name, rules_dir)
+        resolved.source_rules.extend(incoming)
         targets: dict[str, str] = {}
         additions: list[LoadedRule] = []
         for loaded in incoming:
@@ -187,6 +293,11 @@ def resolve(rulesets: Sequence[str], rules_dir: Path | None = None) -> ResolvedR
                     "cannot be amended"
                 )
             targets[target.rule.id] = rule.id
+            resolved.amendments.append(
+                _amendment(
+                    loaded, target, "applied", f"{rule.id} {rule.amends.mode}s {target.rule.id}"
+                )
+            )
             del effective[target.rule.id]
             if rule.amends.mode == "replace":
                 additions.append(loaded)

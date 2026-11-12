@@ -15,6 +15,7 @@ The spec's rule (§16): ask the author before adding a copyleft dependency.
 | ezdxf | MIT | DXF export and import | |
 | trimesh | MIT | glTF export | |
 | mapbox-earcut | ISC | Polygon triangulation for trimesh | |
+| pypdf | BSD-3-Clause | Exact tagged vector-PDF paths and text | Installed metadata and upstream LICENSE checked; no copyleft dependency added. |
 | pillow | MIT-CMU | Rendering synthetic plans | |
 | truststore | MIT | TLS certificates from the OS store for the Census geocoder client | |
 | ifcopenshell | LGPL-3.0-or-later | IFC export, validation, and reading | Copyleft. Used as an unmodified library. Approved by the author, 2026-11-05. |
@@ -29,8 +30,9 @@ The spec's rule (§16): ask the author before adding a copyleft dependency.
 | mypy | MIT | Type checking | |
 | types-PyYAML | Apache-2.0 | Type stubs | |
 
-## Not yet added: need the author's decision
+## PDF selection
 
-| Package | Licence | Needed for | Decision |
-|---|---|---|---|
-| PyMuPDF | AGPL-3.0 or commercial | Vector PDF reading (M2.5). Permissive alternatives: pypdfium2, pdfplumber. | _pending_ |
+The initial vector-PDF reader uses pypdf (BSD-3-Clause), recorded above. Its installed
+metadata and [upstream licence](https://github.com/py-pdf/pypdf/blob/main/LICENSE)
+were checked. Supported paths and text conventions are documented in
+[the exact-input demo](exact-input-demo.md).

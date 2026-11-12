@@ -1,4 +1,4 @@
-.PHONY: setup test lint format train-seg ingest-code validate-rules budget baselines eval api up web
+.PHONY: setup test lint format train-seg ingest-code validate-rules budget baselines eval api up web demo
 
 # Targets that belong to a later milestone fail loudly instead of doing nothing.
 define NOT_YET
@@ -9,22 +9,22 @@ setup:
 	uv sync
 
 test:
-	uv run pytest
+	uv run python -m pytest
 
 lint:
-	uv run ruff check .
-	uv run ruff format --check .
-	uv run mypy
+	uv run python -m ruff check .
+	uv run python -m ruff format --check .
+	uv run python -m mypy
 
 format:
-	uv run ruff check --fix .
-	uv run ruff format .
+	uv run python -m ruff check --fix .
+	uv run python -m ruff format .
 
 validate-rules:
 	uv run python -m plancheck.compliance.registry
 
 budget:
-	$(call NOT_YET,M2)
+	uv run python -m plancheck.evaluation.budget
 
 train-seg:
 	$(call NOT_YET,M3)
@@ -33,10 +33,13 @@ api up:
 	$(call NOT_YET,M6)
 
 web:
-	$(call NOT_YET,M7)
+	uv run python -m plancheck.web
 
 ingest-code baselines:
 	$(call NOT_YET,M8)
 
 eval:
-	$(call NOT_YET,M4)
+	uv run python -m plancheck.evaluation.validate
+
+demo:
+	uv run python -m plancheck.demo

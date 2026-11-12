@@ -68,3 +68,16 @@ def geometry_sigma(model: BuildingModel) -> float:
     thickness uncertainty stands in for it. Exact models (DXF, synthetic) give zero.
     """
     return max((wall.thickness.sigma_mm for wall in model.walls), default=0.0)
+
+
+def connectivity_gaps(model: BuildingModel, include_rooms: bool = True) -> list[str]:
+    """Elements with no connectivity record; absence is not proof of disconnection."""
+    connected = {edge.opening_id for edge in model.graph.edges}
+    missing = [
+        opening.id
+        for opening in model.openings
+        if opening.kind in ("door", "opening") and opening.id not in connected
+    ]
+    if include_rooms:
+        missing.extend(room.id for room in model.rooms if room.id not in model.graph.nodes)
+    return sorted(missing)

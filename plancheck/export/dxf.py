@@ -16,6 +16,7 @@ from ezdxf.enums import TextEntityAlignment
 from shapely.geometry import Polygon
 
 from plancheck.config import load_config
+from plancheck.ingest.dxf import append_exact_entities
 from plancheck.model.geometry import door_swing, opening_span, wall_solids
 from plancheck.model.types import BuildingModel
 
@@ -100,6 +101,7 @@ def build_dxf(model: BuildingModel) -> Drawing:
                 room.label, height=_LABEL_HEIGHT_MM, dxfattribs={"layer": layers["room_label"]}
             )
             label.set_placement((centre.x, centre.y), align=TextEntityAlignment.MIDDLE_CENTER)
+    append_exact_entities(doc, model)
     return doc
 
 

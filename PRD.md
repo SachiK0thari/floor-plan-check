@@ -4,25 +4,25 @@ Floor plan → structured building model → accessibility and building code che
 
 PlanCheck is a **design-assist tool, not a code review**. The full requirements and acceptance criteria are in [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md). This file tracks implementation progress and the remaining work in small steps.
 
-Reviewed on November 7, 2026. Work through the milestones in order and meet each milestone's acceptance criteria before moving on. A checked task means implementation exists; it does not imply the whole milestone is accepted.
+Updated on November 12, 2026. Work through the milestones in order and meet each milestone's acceptance criteria before moving on. A checked task means implementation exists; it does not imply the whole milestone is accepted.
 
 ## Current state
 
-The project is partway through **M2: compliance on ground-truth models**. The model, exporters, synthetic generator, and much of the compliance engine are implemented. The next complete demo is M2.5: DXF and vector PDF → model → checks → report and exports.
+The project is partway through **M2: compliance on ground-truth models**. Reports, BCF, saved runs, multi-code handling, analytic validation, and a preliminary synthetic accuracy budget are implemented. A restricted exact-input demo now runs from semantic DXF and tagged vector PDF through checks and exports. The local webpage also saves source drawings and project revisions, runs explicitly selected ADA reference comparisons, and presents findings and downloads; OCR and local-code execution from the webpage remain pending. Author hand-checks, verified local rules, and the independent CAD evaluation set remain acceptance gaps; the synthetic demo does not close M2/M2.5.
 
-Validation during the review: `make lint test validate-rules` passed, with 375 tests passing and all seven ADA rule files validating against the stored source text. This is a local result; CI remains unverified.
+Latest local validation: 525 tests passed, including real semantic DXF/tagged-PDF runs and HTTP upload → check → download → stale-result rejection. Type checking, lint and formatting checks for changed Python files, and JavaScript syntax checks passed. A headless Chrome smoke check verified page/JavaScript loading and the initial disabled run button; the initial rendered layout was inspected. Full browser interaction testing and CI remain unverified. Earlier rule validation verified all seven ADA rule files against the stored source text.
 
 ## Milestone status
 
 - [ ] M0 — Repository setup: local tooling works; repository tracking, remote, and CI remain.
 - [ ] M1 — Building model, exporters, and synthetic plans: implemented; external and visual validation remain.
 - [ ] M2 — Compliance engine: partly implemented; remaining tasks below.
-- [ ] M2.5 — Exact input paths and CAD-drawn test set.
+- [ ] M2.5 — Exact DXF/tagged-PDF paths and synthetic demo implemented; independent CAD-drawn test set and acceptance remain.
 - [ ] M3 — Segmentation model.
 - [ ] M4 — Vectorization, openings, and rooms.
 - [ ] M5 — OCR and scale recovery.
-- [ ] M6 — End-to-end pipeline, API, and database.
-- [ ] M7 — Web editor and 3D viewer.
+- [ ] M6 — Local exact-input web endpoints, source/project persistence and run revisions implemented; raster integration, production API/database and end-to-end evaluation remain.
+- [ ] M7 — Local jurisdiction confirmation, ADA reference runs, findings and downloads implemented; geometry editor, review queue, 3D viewer and complete demo remain.
 - [ ] M8 — LLM explanations, Q&A, rule drafting, and baselines.
 - [ ] M9 — Results, demo, and write-up.
 
@@ -61,40 +61,44 @@ Validation during the review: `make lint test validate-rules` passed, with 375 t
 - [x] Seven ADA rule files with machine-verified source quotes.
 - [x] Address-to-jurisdiction resolution and adoption-chain handling, tested with saved geocoder responses.
 
-### Remaining steps, in order
+### Implementation progress and remaining acceptance steps, in order
 
 1. **Complete the corridor-width check.**
-   - [ ] Implement `corridor_min_width` using a width profile that avoids false failures at corner branches.
-   - [ ] Measure the length and separation of narrow runs for the existing short-reduction exception.
-   - [ ] Carry measurement uncertainty through the shared verdict functions and return evidence geometry.
-   - [ ] Add boundary, pinch-point, separation, and missing-input tests; register the check.
+   - [x] Implement `corridor_min_width` using a width profile that avoids false failures at corner branches.
+   - [x] Measure the length and separation of narrow runs for the existing short-reduction exception.
+   - [x] Carry measurement uncertainty through the shared verdict functions and return evidence geometry.
+   - [x] Add boundary, pinch-point, separation, and missing-input tests; register the check.
+   - Supported scope: event-exact rectilinear profiles with inferred rectangular paths or supplied full-arm paths. Exception distances across bends/branches and unsupported geometry return `unknown`; see [measurement method and limits](docs/corridor_width.md). Automatic medial-axis extraction remains future work.
 
 2. **Close applicability and scoping gaps.**
-   - [ ] Review the fallback to today's date when `permit_date` is missing; require the information needed to establish applicability and report unresolved applicability explicitly.
-   - [ ] Report elements excluded by scoping as `not_applicable`, with the reason, rather than silently omitting them.
-   - [ ] Confirm missing project inputs and surfaced exceptions remain visible in results and coverage.
+   - [x] Review the fallback to today's date when `permit_date` is missing; require the information needed to establish applicability and report unresolved applicability explicitly.
+   - [x] Report elements excluded by scoping as `not_applicable`, with the reason, rather than silently omitting them.
+   - [x] Confirm missing project inputs and surfaced exceptions remain visible in results and coverage.
 
 3. **Complete multi-code result handling.**
-   - [ ] Keep ADA and adopted-building-code findings separate.
-   - [ ] Add a derived governing requirement for applicable rules testing the same quantity on the same element.
-   - [ ] Test stricter local requirements, amendments, deletions, and rules with different applicability windows.
+   - [x] Keep ADA and adopted-building-code findings separate.
+   - [x] Add a derived governing requirement for applicable rules testing the same quantity on the same element.
+   - [x] Test stricter local requirements, amendments, deletions, and rules with different applicability windows.
+   - Governing comparisons currently support explicit scalar door-clear-width semantics. Compound checks and unresolved exceptions/applicability remain separate, with comparison omissions explained. See [multi-code results](docs/multi_code_results.md). Local tests use synthetic adoption facts; production jurisdiction verification remains below.
 
 4. **Make runs reproducible.**
-   - [ ] Record the engine version or Git SHA alongside the existing rule hashes.
-   - [ ] Record the dependency lockfile hash and verdict configuration.
-   - [ ] Include project context and the resolved ruleset list in the saved run artifact.
+   - [x] Record the engine version or Git SHA alongside the existing rule hashes.
+   - [x] Record the dependency lockfile hash and verdict configuration.
+   - [x] Include project context and the resolved ruleset list in the saved run artifact.
+   - [x] Add JSON save/load round-trip and snapshot-based replay tests, preserving missing inputs, exceptions, and amendment/adoption history. See [saved check runs](docs/check_run_artifacts.md).
 
 5. **Make results readable and portable.**
-   - [ ] Add a readable report containing findings, units, uncertainties, requirements, citations, obligations, and exceptions.
-   - [ ] Include coverage, missing inputs, unchecked provisions, and the design-assist disclaimer.
-   - [ ] Implement BCF export with issue descriptions, citations, viewpoints, and IFC element GUIDs.
-   - [ ] Verify BCF issues reference the corresponding exported IFC elements.
+   - [x] Add a readable report containing findings, units, uncertainties, requirements, citations, obligations, and exceptions.
+   - [x] Include coverage, missing inputs, unchecked provisions, and the design-assist disclaimer.
+   - [x] Implement BCF export with issue descriptions, citations, viewpoints, and IFC element GUIDs.
+   - [x] Verify BCF issues reference the corresponding exported IFC elements.
 
 6. **Expand validation beyond individual fixtures.**
-   - [ ] Add whole-model translation, rotation, and mirror invariance tests.
-   - [ ] Add geometry monotonicity, unit round-trip, and uncertainty tests where applicable.
+   - [x] Add whole-model translation, rotation, and mirror invariance tests.
+   - [x] Add geometry monotonicity, unit round-trip, and uncertainty tests where applicable.
    - [ ] Have the author hand-check three small plans and save expected results as golden files.
    - [ ] Match every expected element/rule verdict, including `unknown` and `not_applicable`.
+   - Draft analytic fixtures and per-element/group expectations are prepared in `eval/compliance/expected.yaml`; all match through both exact paths, but author review remains pending. The strict reviewed-evaluation gate refuses acceptance until sign-off.
 
 7. **Add the first verified local jurisdiction.**
    - [ ] Author selects the jurisdiction and verifies its adoption chain, code editions, dates, and official sources.
@@ -103,27 +107,31 @@ Validation during the review: `make lint test validate-rules` passed, with 375 t
    - [ ] Author fills and verifies the parameters; aim for the specification's initial 5–8 rules expressible by the check types.
    - [ ] Add any check types required by those rules, with known-answer tests.
    - [ ] Test local-code findings and cases where local requirements differ from ADA or an amended base rule.
+   - Region scaffold and one null-parameter draft exist for Maharashtra. Municipality/special authority and permit-date range are still needed; see [verification checklist](docs/maharashtra-verification.md). Synthetic multi-code tests do not establish real local requirements.
 
 8. **Generate the accuracy budget.**
-   - [ ] Implement geometry perturbation and sensitivity analysis on ground-truth models.
-   - [ ] Generate per-check error budgets and input-resolution requirements.
-   - [ ] Implement `make budget` and commit the generated budget table.
+   - [x] Implement geometry perturbation and sensitivity analysis on ground-truth models.
+   - [x] Generate per-check error budgets and input-resolution requirements.
+   - [x] Implement `make budget` and generate the budget table under `eval/reports/`.
+   - Scope: preliminary synthetic, fixture-conditioned budgets with confidence intervals. Independent author-reviewed/local-code validation remains required before treating these as production extraction or upload thresholds.
 
 **Done when:** boundary, metamorphic, and layering tests pass; hand-checked and seeded synthetic plans reproduce expected results for both regimes; reports and BCF export work; and `make budget` generates the accuracy-budget table.
 
 ## M2.5 — Build the first complete demo
 
-- [ ] Define the supported CAD layer mapping and door-block conventions.
-- [ ] Implement DXF import for walls, openings, rooms, and text into `BuildingModel`.
-- [ ] Add unit and geometry round-trip tests for DXF input.
-- [ ] Connect DXF import → compliance → reports and exports through a runnable entry point.
-- [ ] Select a PDF library and record its licence; obtain approval before adding a copyleft dependency.
-- [ ] Implement vector-PDF path/text extraction and plot-scale handling.
-- [ ] Route DXF, vector PDF, and raster inputs to the appropriate paths.
-- [ ] Extract candidate site addresses from title-block text and connect the jurisdiction proposal/confirmation flow.
+- [x] Define the supported CAD layer mapping and door-block conventions.
+- [x] Implement DXF import for walls, openings, rooms, and text into `BuildingModel`.
+- [x] Add unit and geometry round-trip tests for DXF input.
+- [x] Connect DXF import → compliance → reports and exports through a runnable entry point.
+- [x] Select a PDF library and record its licence; obtain approval before adding a copyleft dependency.
+- [x] Implement vector-PDF path/text extraction and plot-scale handling.
+- [x] Route DXF, vector PDF, and raster inputs to the appropriate paths.
+- [x] Extract candidate site addresses from title-block text and connect the local jurisdiction proposal/confirmation flow (vector PDF/DXF; OCR pending).
 - [ ] Author draws the CAD test plans and seeded violations described in specification §7.3, including registration fiducials for scans.
 - [ ] Store expected outcomes per element and per rule in `eval/compliance/expected.yaml`.
 - [ ] Reproduce expected verdicts from both DXF and vector-PDF inputs.
+
+The supported semantic DXF/tagged-PDF convention and synthetic demo reproduce every draft expected verdict; ordinary untagged CAD plots and the independent author-drawn set remain outstanding. Raster routing explicitly reports the unimplemented extraction path. See [exact-input demo](docs/exact-input-demo.md). Native PDF assessment reports and external viewer acceptance are also pending.
 
 **Done when:** the seeded set runs end to end from both exact input paths with every expected verdict reproduced.
 
@@ -164,8 +172,11 @@ Validation during the review: `make lint test validate-rules` passed, with 375 t
 
 - [ ] Connect raster preprocessing, extraction, OCR, scale, and compliance.
 - [ ] Preserve uncertainty through extraction and verdicts.
-- [ ] Add project/model persistence and model versions.
-- [ ] Implement upload, processing-status, project-context, check-run, and export endpoints.
+- [x] Add local source-drawing/project persistence, project revisions and run snapshots for supported exact inputs. Reopening restores settings, evidence, drawings and current results; changing check inputs or drawings invalidates previous results.
+- [ ] Add production database persistence and editable building-model versions.
+- [x] Implement local upload/text extraction, project listing/saving, explicit ADA reference check-run and export-download endpoints.
+- [x] Verify source hashes before checking, retain saved settings and engine/rule provenance, reject stale revisions/downloads, and remove partial outputs after failed runs.
+- [ ] Add asynchronous processing/status endpoints and the production API lifecycle; current local runs are synchronous.
 - [ ] Add the API service to the development stack; implement `make api` and `make up`.
 - [ ] Generate end-to-end metrics with confidence intervals, false passes/fails, and risk–coverage curves, broken out by ruleset and input path.
 
@@ -173,14 +184,27 @@ Validation during the review: `make lint test validate-rules` passed, with 375 t
 
 ## M7 — Build the web editor and 3D viewer
 
-- [ ] Add upload, progress, project settings, and jurisdiction confirmation.
+- [x] Record each plan's country, region and responsible authority through manual webpage entry or an explicitly confirmed drawing-text proposal. Selection is per project; verified legal authority/adoption resolution and local-code execution remain pending.
+- [ ] Extend the implemented vector-text location proposal flow to OCR/raster evidence. Preserve source-page/position evidence and manual fallback; a mailing city alone must not establish the authority.
+- [x] Extract labelled location hints from ordinary vector-text PDF and DXF with page/layout, fragment anchors, raw-text evidence, duplicate/conflict handling, and saved-run persistence. These remain unconfirmed; see [location evidence](docs/location-evidence.md). Offline named-authority matching and a local confirmation webpage are implemented; OCR remains pending.
+- [x] Present country, state/region, city/municipality or special planning authority, and permit application date in the local upload/project-settings flow. Allow upload/draft saving before completion, but keep local-code checking unresolved until required inputs are supplied. Do not silently default to Maharashtra or infer confirmation from drawing text.
+- [x] Add local upload, processing feedback, project settings, and jurisdiction confirmation (synchronous exact-input runs; production/background processing remains pending).
+- [x] Add a per-project jurisdiction selector with country and state/region, including **India → Maharashtra**, followed by city/municipality or special planning authority and permit application date.
+- [x] Save the selection with the project and restore it when reopened; changing it invalidates earlier check results and requires a new run (local JSON persistence; production database pending).
+- [x] Add the ruleset-availability panel for recorded code editions, effective dates and source links, with adoption-chain completeness and permit-date checks. Unverified locations can be saved and local code remains **not checked**. No active verified adoption records are present; production local-rule availability remains unverified.
+- [x] For Maharashtra, use manual authority selection until an India-capable resolver is implemented; do not send Indian addresses to the U.S. Census resolver. Offer ADA only as an explicitly selected reference comparison for Indian projects.
 - [ ] Overlay extracted geometry on the source drawing with layer toggles.
-- [ ] Support wall/opening edits, labels, and manual scale selection.
+- [x] Add optional facility type, occupancy, work type, sprinkler status and manual PDF scale entry to saved check inputs. Missing facts stay unknown; a manual scale must agree with embedded scale on supported tagged PDFs.
+- [ ] Support wall/opening and label edits, plus scale recovery/manual calibration for ordinary or raster drawings.
 - [ ] Rank the review queue by whether uncertainty can change a verdict; re-run checks after corrections.
-- [ ] Add findings, citations, governing requirements, and coverage panels.
+- [x] Run ADA reference comparisons from the webpage only after explicit selection and saved location confirmation, using supported semantic DXF/tagged PDF. Unsupported geometry and image-only inputs produce errors without guessed verdicts.
+- [x] Add findings, citations, measurements/uncertainties, governing requirements, comparison limits and coverage panels for these reference runs; local-code execution remains pending.
 - [ ] Load glTF in the 3D viewer and verify scale and orientation.
-- [ ] Add DXF, IFC, glTF, BCF, and PDF-report downloads plus the persistent disclaimer.
-- [ ] Implement `make web` and record a complete demo.
+- [x] Add DXF, IFC, GLB, BCF, saved run JSON and HTML/Markdown report downloads, with the persistent design-assist disclaimer and stale-download blocking.
+- [ ] Add native PDF assessment-report downloads.
+- [x] Implement `make web` for the local confirmation and exact-input reference-check flow.
+- [x] Verify local HTTP upload/save/run/download behavior, source replacement/settings invalidation and unsupported-input handling with automated tests; perform an initial Chrome rendering smoke check.
+- [ ] Complete browser interaction testing and record the full editor/review/3D/export demo.
 
 **Done when:** a user can upload, clear the review queue, re-check, view in 3D, and export.
 
@@ -208,7 +232,7 @@ Validation during the review: `make lint test validate-rules` passed, with 375 t
 
 ## Author inputs needed
 
-- First local jurisdiction and verified adoption/rule information.
+- Initial region selected: Maharashtra, India. The application user selects the city/municipality or special planning authority and permit date per project; verified adoption/rule information is still needed before local checks can run.
 - Door clear-width deduction values and uncertainties, supported by door/frame details. Until supplied, use measured clear widths or report `unknown`.
 - Independently hand-checked plans and the CAD-drawn evaluation set.
 - PDF-library licensing decision before adding a copyleft dependency.
