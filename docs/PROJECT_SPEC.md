@@ -10,6 +10,12 @@
 
 PlanCheck takes a floor plan (scanned image or PDF), converts it into a **structured, editable building model** (walls, doors, windows, rooms, dimensions, connectivity), exports it to **DXF / IFC / 3D**, and then **checks it against accessibility rules (2010 ADA Standards) and the local building code adopted by the project's jurisdiction**, showing each violation on the drawing with the cited code section.
 
+**PlanCheck is a web application.** The product is the webpage: upload a plan, confirm where the building is, review findings, correct the model, and export. The Python package, command-line entry points and local JSON persistence are the engine and development scaffolding behind it, not a separate product.
+
+**The jurisdiction comes from the building's location, and no region is special.** It is derived per project, first from the uploaded plan (site plan or title block) and otherwise from a location the user gives, then confirmed by the user (§3.2). No jurisdiction is a default or a required first target.
+
+Within each project the user chooses what to check from three tabs: **Building code** (the regulatory checks above), and, as a future guidance layer, **Vastu Shastra** and **Feng Shui** (M10). Guidance layers are not codes and never affect a regulatory verdict.
+
 It combines two ideas:
 1. **Floor plan → 3D/structured model** (computer vision + geometry).
 2. **Code compliance checker** (rule engine + retrieval-augmented LLM for explanation and citation).
@@ -35,7 +41,7 @@ Portfolio framing for an **AI Engineer** role, author has **Architecture (underg
 2. Recover real-world scale from dimension strings or a scale bar.
 3. Export DXF (2D CAD), IFC (BIM), and glTF (3D web viewer).
 4. Run a set of versioned, cited, unit-tested compliance rules against the model.
-5. Check the plan against the **local building code** of one target jurisdiction, modeled as a ruleset layered on top of the base rules (§3.2, §9).
+5. Check the plan against the **local building code** of the project's own jurisdiction, derived from its location and confirmed by the user, modeled as a ruleset layered on top of the base rules (§3.2, §9). Adding an authority in any country requires only an adoption record and a ruleset, never a code change.
 6. Show violations overlaid on the plan, each with measured value, required value, and code citation.
 7. Evaluate extraction and compliance separately and end-to-end.
 8. Report coverage with every result: which provisions were checked, which were not applicable, and which cannot be checked from a plan.
@@ -47,7 +53,8 @@ Portfolio framing for an **AI Engineer** role, author has **Architecture (underg
 - Structural, MEP, or fire-rating checks.
 - Legal certification — the README and UI must say this is a **design-assist tool, not a code review**, and the applicable code edition depends on the jurisdiction.
 - Hand sketches (clean drawings and scans only).
-- Broad jurisdiction coverage. The design supports any number of jurisdictions, and the resolver works for any U.S. address, but v1 ships verified adoption records and rules for only the one or two the author verifies.
+- Broad jurisdiction coverage. The design supports any number of jurisdictions in any country, but v1 ships verified adoption records and rules for only the one or two the author verifies; the first may be anywhere. Automatic location lookup exists only for countries with an approved provider (the U.S. Census geocoder first); elsewhere the user names the authority. A location without a verified ruleset is saved and reported as "local code not checked".
+- Vastu Shastra and Feng Shui guidance in v1. They are a future milestone (M10), after M9; their tabs appear in M7 as not yet available.
 
 ---
 
@@ -72,30 +79,33 @@ The tool must get applicability right before it measures anything. Four facts sh
 
 ### 3.2 Local building code (jurisdiction layer)
 
-PlanCheck also checks the plan against the building code **as adopted by one target jurisdiction**.
+PlanCheck also checks the plan against the building code **as adopted by the project's own jurisdiction**.
 
-**The jurisdiction is a property of each plan, not of the tool.** It is set in one of two ways:
+**The jurisdiction is a property of each plan, not of the tool, and no region is special.** There is no application-wide default authority, and no country or region is the required first target. The jurisdiction is derived from the building's location, in this order:
 
-The submitting webpage user may enter/select the local jurisdiction or confirm/correct a proposal extracted from the site plan/title block. The local-check action requires the country, state/region, city/municipality or special planning authority, and permit application date. Uploads and drafts may be saved earlier, with unresolved local applicability. There is no application-wide default to Maharashtra or any single authority. End users supply or confirm location/project facts; maintaining verified adoption records and numeric rule parameters is the application's rules-library responsibility, not a form users must author themselves. An unsupported selection is saved with an explicit "local code not checked" result, rather than substituting another authority's rules. Any reference-only mode must be explicitly selected and labelled separately.
+1. **From the uploaded plan.** A site plan or title block usually carries the location. The application identifies the site-plan sheet and title block in a multi-sheet upload and searches them first (M2.5 for vector text, M5 for OCR, M8 optionally with an LLM that only proposes). It keeps candidate addresses, country/state/city names and any named planning authority, each with source-page and evidence-location provenance, shows the evidence highlighted on the sheet, proposes the responsible authority, and the user confirms or corrects it.
+2. **From the user's location.** When the plan has no usable location, or the evidence is missing, ambiguous or conflicting, the application asks where the building is: an address, a city/region/country, or a point on a map. It resolves the authority from that answer. The user should not need to know the authority's name.
+3. **From the user naming the authority.** Only when resolution fails, or no location provider exists for the country, does the application ask for the authority by name, matched against the adoption-record catalogue within that country.
 
-For site-plan extraction, retain candidate addresses, country/state/city names, and any named planning authority with source-page and evidence-location provenance. Vector text is the first path; OCR supplies raster evidence later. Show the extracted evidence beside the proposed authority for confirmation. Missing, conflicting, or ambiguous evidence falls back to manual selection. Neither a mailing-city label nor drawing text alone proves the legal authority, adopted edition, or effective dates. Geocoder calls follow the existing explicit user-action requirement and supported-country restrictions; extraction itself does not send an address externally. Structured labelled vector-text hints are now available via `plancheck.jurisdiction.extract`, persisted as `BuildingModel.location_extraction`, and displayed as unconfirmed evidence in reports. This is extraction only, not a completed authority-matching or confirmation UI; see [location evidence](location-evidence.md).
+`ProjectContext.jurisdiction_source` records which path was taken (plan evidence, user location, or user-named authority) and whether the user has confirmed it. Until confirmed, results under a local ruleset are labelled provisional. The local-check action requires a confirmed authority and the permit application date; uploads and drafts may be saved earlier, with local applicability unresolved. Saving a location never activates a ruleset by itself.
 
-1. The user selects it in the web application's project settings: country → state/region → city/municipality or special planning authority, plus permit application date. Include **India → Maharashtra** as a selectable region; it is not a hard-coded jurisdiction for every project. Save the selection per project with `jurisdiction_source: user`. Maharashtra alone does not resolve the applicable authority or ruleset.
-2. The tool reads the site address from the drawing (title block or site plan; M2.5 for vector text, M5 for OCR), geocodes it, and **proposes** the jurisdiction. The user confirms. Until confirmed, results under a local ruleset are labelled provisional, and `ProjectContext.jurisdiction_source` records which path was taken.
+End users supply or confirm location and project facts; maintaining verified adoption records and numeric rule parameters is the application's rules-library responsibility, not a form users author themselves. A location whose authority has no verified ruleset is saved with an explicit "local code not checked" result, rather than substituting another authority's rules. Any reference-only comparison (for example ADA for a project outside the U.S.) must be explicitly selected and labelled separately.
 
-Three facts make step 2 harder than reading the city off the address, and the resolver (`plancheck/jurisdiction/`) handles each:
+Neither a mailing-city label nor drawing text alone proves the legal authority, adopted edition or effective dates. Extraction never sends anything externally; a location goes to an external lookup service only on an explicit user action that names the service receiving it. Structured labelled vector-text hints are available via `plancheck.jurisdiction.extract`, persisted as `BuildingModel.location_extraction`, and displayed as unconfirmed evidence in reports; see [location evidence](location-evidence.md).
 
-The existing address resolver supports U.S. addresses. Maharashtra projects use manual authority selection until an India-capable resolver is implemented; Indian addresses must not be sent to the U.S. Census resolver. Extending persistence and adoption-record identifiers beyond Census level/GEOID is required before integrating Indian local rules. A selectable region is location metadata, not evidence of a verified adoption record.
+**Location lookup is one country-agnostic interface with a provider per country** (`plancheck/jurisdiction/resolve.py`, `providers.py`). A provider turns a location into the ordered list of governments whose boundaries contain the site, broadest first, and names the service it sends the location to. The U.S. Census Bureau geocoder is the first provider. Each further provider needs an author-approved data source, licence and privacy review. A country without a provider falls back to the user naming the authority (step 3); a location is never sent to another country's provider.
 
-- **A mailing city is not a jurisdiction.** An address can read "Los Angeles, CA" and sit in unincorporated county land, where the county is the authority. The lookup geocodes the address with the U.S. Census Bureau geocoder (free, no key, a government service) and uses the state, county, and incorporated-place boundaries that contain the point, keeping only boundaries with an active government. Using it sends the site address to the Census Bureau; the lookup runs only when asked.
-- **Adoption is layered.** A city usually amends the code its state adopted. Adoption records therefore form a chain (`parent:`), and the resolver returns the ordered list of local rulesets to layer: state first, then county or city.
-- **Some projects answer to a different authority whatever the address** (state-owned buildings, public schools, hospitals, federal and tribal land). Every proposal says so and asks for confirmation. It also shows the geocoder's matched address, which can differ from the input.
+Three facts make resolution harder than reading the city off an address, and the resolver handles each:
 
-Adoption records live in `configs/jurisdictions/<slug>.yaml`, one per jurisdiction the tool knows, keyed by Census level and GEOID. A resolved authority with no record, or with an incomplete one, gets no local rules, and the coverage statement says "the local building code of <name> was not checked". The tool ships with as many verified records as the author has checked against official sources (zero at first); adding a jurisdiction means adding a record and a ruleset, not changing code.
+- **A mailing city is not a jurisdiction.** In the U.S., an address can read "Los Angeles, CA" and sit in unincorporated county land, where the county is the authority. The Census provider uses the state, county and incorporated-place boundaries that contain the geocoded point, keeping only boundaries with an active government. Other countries have their own versions of this problem, which their providers handle.
+- **Adoption is layered.** A city usually amends the code its state or nation adopted. Adoption records therefore form a chain (`parent:`) within one country, and the resolver returns the ordered list of local rulesets to layer, broadest first.
+- **Some projects answer to a different authority whatever the address** (state-owned buildings, public schools, hospitals, federal and tribal land). Every proposal says so and asks for confirmation. It also shows the provider's matched address, which can differ from the input.
+
+Adoption records live in `configs/jurisdictions/<slug>.yaml`, one per authority the tool knows, keyed by **`country` and `authority_id`** the same way in every country. A U.S. record may give its Census `level` and `geoid` instead, which name the same identifier (`census:<level>:<geoid>`); a GEOID is never invented for a non-U.S. authority. A resolved authority with no record, or with an incomplete one, gets no local rules, and the coverage statement says "the local building code of <name> was not checked". The tool ships with as many verified records as the author has checked against official sources (zero at first); adding a jurisdiction in any country means adding a record and a ruleset, not changing code.
 
 A local code is normally a model code edition (IBC/IRC, or a state code built on them) plus local amendments. So it is modeled as a **layer over the base rules**, not as a separate copy:
 
-- **Adoption record** — `configs/jurisdictions/<slug>.yaml`, entered from the jurisdiction's official source and verified against it: `name`, `slug`, `level` and `geoid` (how the address lookup finds it), `parent` (the record it amends), `base_code`, `base_edition`, `effective_date`, `adopting_reference` (ordinance or statute number), `source_url`, `retrieved_on`, `verified_by`.
+- **Adoption record** — `configs/jurisdictions/<slug>.yaml`, entered from the jurisdiction's official source and verified against it: `name`, `slug`, `country`, `level` and `authority_id` (how location lookup finds it; U.S. records may use `geoid`), `parent` (the record it amends, in the same country), `base_code`, `base_edition`, `effective_date`, `adopting_reference` (ordinance or statute number), `source_url`, `retrieved_on`, `verified_by`.
 - **Local rules** — `rules/local/<slug>/`, one YAML per provision the tool checks. Real amendments come in three forms, so `amends` has a mode: **replace** a base rule (different params), **delete** a base rule (the jurisdiction struck the section; the rule file has no params and the report shows the deletion), or **add** a requirement the base rules don't have (`amends: null`).
 - **Adoption chain** — adoption is often three levels deep: model code, state adoption with state amendments, then city or county amendments. Some states don't allow local amendments at all. The ordered ruleset list handles this if a rule may amend another amending rule. The registry resolves chains in order and rejects cycles and two rules at the same level amending the same target.
 - **Precedence** — a local rule replaces the `ibc_style` rule it amends. Local rules **never replace ADA rules**: the ADA and the building code are separate obligations, so both run and both are reported (§3.0).
@@ -196,6 +206,9 @@ class Graph:       nodes = room ids + "exterior", edges = openings connecting th
 class ProjectContext:                                     # user-entered; jurisdiction may be proposed from the address
     site_address: str | None, jurisdiction: str | None,
     jurisdiction_source: Literal["user","address_proposed","address_confirmed"] | None,
+        # M7 replaces these with the §3.2 paths (plan evidence, user location,
+        # user-named authority) plus a separate confirmed flag
+    country: str | None,   # ISO 3166-1 alpha-2; adoption records match on country + authority_id
     facility_type: str | None, occupancy: str | None,
     sprinklered: bool | None, work_type: Literal["new","alteration","existing"] | None,
     permit_date: date | None
@@ -628,20 +641,24 @@ POST /v1/plans                      upload → plan_id, starts extraction job
 GET  /v1/plans/{id}                 status + BuildingModel
 PUT  /v1/plans/{id}/model           save user corrections (new model version)
 POST /v1/plans/{id}/scale           set scale manually
-PUT  /v1/plans/{id}/project         set ProjectContext (jurisdiction, facility type, occupancy, sprinklered, work type, permit date)
-POST /v1/plans/{id}/check           {rulesets: ["ada_2010", "local/<slug>"]} → compliance run id
+GET  /v1/plans/{id}/location        location evidence from the plan + proposed authority (nothing sent externally)
+POST /v1/plans/{id}/locate          {country, address | place | point} → proposal; explicit action, response names the service used
+PUT  /v1/plans/{id}/project         set ProjectContext (confirmed jurisdiction + jurisdiction_source, facility type, occupancy, sprinklered, work type, permit date)
+GET  /v1/plans/{id}/options         status per tab: building_code | vastu | feng_shui (not started, needs input, results ready, out of date)
+POST /v1/plans/{id}/check           {option: "building_code", rulesets: ["ada_2010", "local/<slug>"]} → compliance run id
 GET  /v1/checks/{run_id}            results + explanations + coverage statement
 GET  /v1/checks/{run_id}/bcf        violations as a BCF file (§12.1)
 GET  /v1/plans/{id}/review-queue    elements ranked by effect on verdicts
 GET  /v1/plans/{id}/export/{fmt}    dxf | ifc | gltf | pdf-report
 POST /v1/plans/{id}/ask             Q&A over plan + results
 GET  /v1/rules                      list rules with status/verification (?jurisdiction=)
-GET  /v1/jurisdiction               adoption record for the configured jurisdiction
+GET  /v1/jurisdictions              adoption-record catalogue (?country=), with verification status
+GET  /v1/plans/{id}/jurisdiction    the plan's confirmed authority chain and adoption records
 ```
 
 ### Tables (PostgreSQL + pgvector)
 - `plans`, `model_versions` (every correction is a new version — auditability), `jobs`
-- `jurisdictions` (adoption records from `configs/jurisdictions/`)
+- `jurisdictions` (adoption records from `configs/jurisdictions/`, unique on `country` + `authority_id`)
 - `rulesets` (with `jurisdiction_id`, null for base), `rules` (loaded from YAML, with git hash of the rule file, `amends_rule_id`)
 - `check_runs` (plan model version + ordered ruleset versions + resolved rule list + engine version + lockfile hash + verdict config → reproducible), `check_results`
 - `code_chunks` (code, jurisdiction, edition, section_id, parent_section, kind, references, text, embedding) — ADA text, plus local text only where `docs/code_sources.md` allows it
@@ -674,11 +691,18 @@ A compliance report must be reproducible from (`model_version_id`, ordered `rule
 
 ## 13. Front end (web)
 
+The web application is the product (§1). Engine modules are reached only through it, apart from development entry points.
+
+- **Project top bar with three tabs:** **Building code**, **Vastu Shastra** and **Feng Shui**. The bar is visible on every project screen and shows which tab is open. On phone width the tabs collapse into a burger menu with the same three entries and statuses. Tabs and menu are operable by keyboard and screen reader.
+  - Each tab shows its own status: *not started*, *needs input*, *results ready* or *out of date*. Changing the drawing marks every tab with results out of date; changing one option's inputs marks only that tab out of date.
+  - Each option has its own inputs, run action, results view, downloads and report section, saved with the project. A project can hold results for more than one option, but they are never merged into one verdict. Nothing runs until the user starts it from that option's tab.
+  - The location and jurisdiction steps belong to **Building code** only. Until M10 delivers them, **Vastu Shastra** and **Feng Shui** show as not yet available: selecting one explains that, and never produces a result or falls back to building-code findings.
 - Upload page → progress.
+- **Location (first step of Building code after upload):** show what the plan says about the site, with the evidence highlighted on the sheet, and the proposed authority for confirmation (§3.2 step 1). When the plan gives no usable location, ask where the building is (address, city/region/country, or a point on a map) and resolve the authority from it (step 2); ask for the authority by name only when resolution fails (step 3). Show the resolved authority chain, how it was derived, and whether a verified ruleset exists. Any external lookup runs only on an explicit action that names the service receiving the location.
 - **Plan editor:** original raster underneath, extracted vectors on top (SVG/canvas). Toggle layers. Drag wall endpoints, add/delete openings, edit labels, set scale by clicking two points and typing a length.
 - **Review queue:** the elements whose uncertainty can change a verdict, most influential first (§8.1 step 8). Confirming or correcting one re-runs compliance and re-ranks the queue. The queue being empty is the signal that the remaining results are stable.
-- **Project settings:** site address with a "find jurisdiction" action that shows the proposal (matched address, authority found, notes) for confirmation, or a jurisdiction entered by hand, or "none — ADA only"; facility type, occupancy, sprinklered, type of work, permit date. Shows the adoption record: adopted code, edition, effective date, source link, date retrieved.
-- **Jurisdiction selection:** country and state/region selectors include India → Maharashtra, followed by city/municipality or special planning authority and permit application date. Allow manual authority entry when no verified option exists. Display ruleset availability and verification status before running checks. Save and restore these fields per project; a changed selection invalidates earlier results and requires rechecking. Missing authority, required date, or verified adoption data leaves local coverage explicitly "not checked"; saving a location must not activate a ruleset by itself. For Indian projects, ADA is an optional reference comparison selected explicitly and labelled separately from local requirements.
+- **Project settings (Building code):** facility type, occupancy, sprinklered, type of work, permit application date. Shows the adoption record chain: adopted code, edition, effective date, source link, date retrieved, and verification status, before checks run. Save and restore these fields per project; a changed location, authority or input invalidates earlier Building code results and requires rechecking.
+- **Jurisdiction choices come from the adoption-record catalogue**, so no country or region is hard-coded in the page. Allow manual authority entry when no catalogued option exists. A missing authority, permit date or verified adoption data leaves local coverage explicitly "not checked". For a location with no verified ruleset, offer only explicitly selected reference comparisons (such as ADA outside the U.S.), labelled separately from local requirements.
 - **Violations panel:** list grouped by code (ADA / local building code), then by rule; clicking highlights the element and shows measured ± uncertainty vs required (in the source's unit, with metric alongside), why the element was obligated, any exception that may apply, explanation, and citation link. Local rules that amend a base rule are tagged as amendments. Where two regimes test the same element, the governing requirement is marked. `borderline` and `unknown` are shown differently, each with the action that resolves it.
 - **Coverage panel:** what was checked, what was not applicable, what is not implemented, and what cannot be seen on a plan (§9.4). It appears on screen and on the first page of the PDF report.
 - **3D view:** three.js loading the glTF export (walls extruded to a default height, openings cut).
@@ -715,16 +739,17 @@ Skeleton per §6, tooling, CI. **Done when:** `make lint test` passes in CI.
 ### M2 — Compliance engine on ground-truth models
 - Rule registry, scoping and technical rules, the single verdict rule (§9.3), the v1 check types, the tests in §9.7, report generation with the coverage statement, and the BCF exporter (§12.1).
 - Author fills and verifies params for the initial ADA rules.
-- **Jurisdiction resolver** (§3.2): address → authority → adoption record chain → local rulesets, tested against saved geocoder responses.
-- **Local building code:** for the first jurisdiction, fill and verify `configs/jurisdictions/<slug>.yaml` and `docs/code_sources.md` from official sources, then fill and verify an initial set of local rules (aim for 5–8 that the v1 check types can express), each number with its quote. Claude Code builds the ruleset layering (§9.5) and scaffolds the rule files with null params.
+- **Jurisdiction resolver** (§3.2): location → authority → adoption record chain → local rulesets, tested against saved provider responses. The engine must not depend on the chosen jurisdiction: a test adds a second synthetic authority in a different country using only an adoption record and a ruleset.
+- **Local building code:** for the first jurisdiction (any single authority, in any country; the author picks the one whose official sources they can verify most reliably), fill and verify `configs/jurisdictions/<slug>.yaml` and `docs/code_sources.md` from official sources, then fill and verify an initial set of local rules (aim for 5–8 that the v1 check types can express), each number with its quote. Claude Code builds the ruleset layering (§9.5) and scaffolds the rule files with null params.
 - **Accuracy budget** (§11.1): run the sensitivity analysis and commit the budget table. M3–M5 are judged against it.
 - **Done when:** boundary, metamorphic, and layering tests pass; hand-checked plans match; results are correct on synthetic plans with seeded violations for both rulesets; `make budget` produces the table.
 - *(Doing compliance before extraction proves the rule engine is correct independently of CV errors.)*
 
 ### M2.5 — Exact input paths: DXF and vector PDF
 - Input router, DXF importer, vector PDF reader (§8.0).
-- Site address extraction from title-block text, feeding the jurisdiction resolver.
-- The author draws the CAD part of the own test set (§7.3) and the seeded-violation plans; the importer produces their ground truth.
+- Site address extraction from title-block text, feeding the jurisdiction proposal (§3.2 step 1). Identify the site-plan sheet and title block in a multi-sheet upload and search them first.
+- North arrow and plot boundary from exact inputs where drawn, with provenance and uncertainty; orientation is recorded as unknown when absent (M10 depends on it).
+- The author draws the CAD part of the own test set (§7.3) and the seeded-violation plans; the importer produces their ground truth. Include at least one sheet set whose site plan carries a location and one with no location.
 - **Done when:** the seeded set runs end to end from DXF and from vector PDF with every expected verdict reproduced. This is the first complete demo, and it exists before any model is trained.
 - *(This also removes a dependency in the original plan, where extraction metrics in M4 needed ground truth that was to be annotated in the M7 editor.)*
 
@@ -738,25 +763,35 @@ Skeleton per §6, tooling, CI. **Done when:** `make lint test` passes in CI.
 
 ### M5 — OCR + scale recovery
 - Label/dimension/tag OCR, parser with unit tests for each format, dimension-line detection, chain closure, robust scale solve per axis.
+- Location text, north arrow and plot boundary from scanned site plans and title blocks, feeding the same proposal flow as vector text.
 - **Done when:** scale error and label accuracy reported per evidence type; plans without readable dimensions fall back cleanly to user scale.
 
 ### M6 — End-to-end compliance + API + DB
 - Raster extraction → compliance, uncertainty carried into verdicts, endpoints, versioned models.
 - Project context and multi-ruleset check runs.
+- Location-to-authority resolution behind one country-agnostic interface with a provider per country; adoption-record and persistence identifiers are `country` + `authority_id` everywhere.
 - **Done when:** end-to-end compliance metrics on the seeded set are in the report with confidence intervals, broken out per ruleset and per input path, with the risk–coverage curve.
 
 ### M7 — Web editor + 3D viewer
-- Includes the review queue and the coverage panel.
-- **Done when:** a user can upload, work the review queue until it is empty, re-check, view in 3D, and export. Record a demo GIF.
+- Includes the project tab bar (§13), the location-first Building code flow, the review queue and the coverage panel.
+- Jurisdiction choices are driven from the adoption-record catalogue; region-specific wording and behaviour are removed from the interface, tests and docs.
+- **Done when:** a user can upload, open the **Building code** tab, confirm a jurisdiction derived from the plan or from a location they enter, work the review queue until it is empty, re-check, view in 3D, and export. Record a demo GIF.
 
 ### M8 — LLM layer: explanations + Q&A + rule drafting + baselines
 - Local rules get explanations too: from fetched text where it is storable, otherwise from the rule's paraphrase with a link out.
 - Run the baselines in §11.5.
+- Optional LLM-assisted location extraction for site plans and title blocks the labelled-text extractor cannot read. The model only proposes; every proposed field must point to text found on the sheet, the user confirms it, and it never establishes the authority, edition or dates.
 - **Done when:** the metrics in §11.4 and the baseline table are in the report; the validator blocks bad citations, stray numbers, and cross-jurisdiction citations.
 
 ### M9 — Write-up
 - README with demo, architecture diagram, **results tables from the report**, limitations, disclaimer.
 - `docs/writeup.md`: why geometry decides and the LLM explains (with the baseline numbers), the accuracy budget and whether extraction met it, the verdict rule and its risk–coverage curve, vectorization heuristics, where extraction errors hurt compliance most, the rule-drafting correction rate, what failed.
+
+### M10 — Future: Vastu Shastra and Feng Shui guidance
+- Starts after M9. Optional, separately labelled guidance layers over the same building model, each run only from its own tab and needing no jurisdiction.
+- They are a separate **guidance** regime: never part of a governing requirement, never changing a regulatory verdict, and worded as alignment with a tradition, not compliance or violation.
+- Every ruleset names its system, school and author-chosen source; parameters are author-verified, never from general knowledge.
+- Detailed requirements and acceptance criteria are added to this specification before M10 begins (see `PRD.md` M10).
 
 ---
 
@@ -766,6 +801,8 @@ Skeleton per §6, tooling, CI. **Done when:** `make lint test` passes in CI.
 - Pydantic types across all module boundaries; mm units internally, everywhere.
 - Every geometry check and parser gets unit tests with known answers.
 - **Never invent code requirements.** Numeric rule params come only from the author, verified against the source.
+- **No jurisdiction is a default.** The jurisdiction is derived per project from the plan or the user's location and confirmed by the user. An unsupported location is reported as "not checked", never checked against another authority's rules. No country or region is hard-coded in the engine or the page.
+- Keep traditional guidance (M10) separate from regulatory findings in data, verdicts, reports and the interface.
 - **Never invent adoption facts.** Which code and edition a jurisdiction adopted, effective dates, and amendment contents come only from an official source, verified and recorded in `configs/jurisdictions/<slug>.yaml`. A jurisdiction without a complete record gets no local rules.
 - **Never store or reproduce copyrighted code text** (e.g., IBC). ADA 2010 text is fine. Local code text is stored only for sources the author marked storable in `docs/code_sources.md`; otherwise paraphrase and link.
 - Don't scrape or bulk-download municipal or state code websites; the author supplies any local text.
