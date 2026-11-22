@@ -4,11 +4,11 @@ Floor plan → structured building model → accessibility and building code che
 
 PlanCheck is a **design-assist tool, not a code review**. The full requirements and acceptance criteria are in [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md). This file tracks implementation progress and the remaining work in small steps.
 
-Updated on November 12, 2026. Work through the milestones in order and meet each milestone's acceptance criteria before moving on. A checked task means implementation exists; it does not imply the whole milestone is accepted.
+Updated on November 22, 2026. Work through the milestones in order and meet each milestone's acceptance criteria before moving on. A checked task means implementation exists; it does not imply the whole milestone is accepted.
 
 ## Product direction
 
-Decided by the author on November 12, 2026. [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md) §1, §2, §3.2, §12, §13, §15 and §16 were updated to match on the same day; M10's detailed requirements are still to be added to the specification before M10 starts.
+Items 1 to 4 were decided by the author on November 12, 2026. [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md) §1, §2, §3.2, §12, §13, §15 and §16 were updated to match on the same day; M10's detailed requirements are still to be added to the specification before M10 starts. Items 5 and 6 were decided on November 22, 2026; the specification has not yet been updated for them.
 
 1. **PlanCheck is a web application.** The user-facing product is the webpage: upload a plan, confirm where the building is, review findings, correct the model, and export. The Python package, command-line entry points and local JSON persistence are the engine and development scaffolding behind it, not a separate product.
 2. **The jurisdiction comes from the building's location, and no region is special.** The application works out the local jurisdiction in this order:
@@ -23,6 +23,8 @@ Decided by the author on November 12, 2026. [docs/PROJECT_SPEC.md](docs/PROJECT_
    - **Feng Shui**
 
    Each option has its own inputs, run, results view and report section. Each tab shows its own status: not started, needs input, results ready, or out of date. A project can hold results for more than one option, but they are never merged into one verdict. Nothing runs until the user starts it from that option's tab.
+5. **Scope for now: India and the USA.** Location lookup, the country list, code families and test data are built for these two countries only. Item 2 still holds within them: no state, city or authority is a default. Where this file or the specification says "any country", read it as India or the USA until the author widens the scope.
+6. **Life safety plan.** The application can make a draft life safety plan from the building model: occupant loads, exits, egress paths with travel distance, common path of travel, dead ends, exit separation and exit capacity, drawn as a sheet with tables. Making comes first. Checking the same quantities against the adopted code follows, and uses author-verified values only. The result is a draft for the designer to review, not a permit-ready sheet. See M2.6.
 
 ## Current state
 
@@ -30,12 +32,15 @@ The project is partway through **M2: compliance on ground-truth models**. Report
 
 Latest local validation: 534 tests passed, including the jurisdiction-independence tests and real semantic DXF/tagged-PDF runs and HTTP upload → check → download → stale-result rejection. Type checking, lint and formatting checks for changed Python files, and JavaScript syntax checks passed. A headless Chrome smoke check verified page/JavaScript loading and the initial disabled run button; the initial rendered layout was inspected. Lint and tests pass in CI; full browser interaction testing remains unverified. Earlier rule validation verified all seven ADA rule files against the stored source text.
 
+A full code review on November 22, 2026 found defects that can produce an unjustified `pass` or a false `fail`, and gaps that block M2.5. The resulting tasks are marked **(review)** in the milestones below, each with its item number from the review. The reproduction notes and the design for each fix are in the local working file `miscellaneous/IMPROVEMENT_PLAN.md`, which is not in Git. On the same day a second model re-checked the seven ADA rules against the stored text: values, units, sections and quotes were confirmed, one discrepancy is open, and the rules are still not author-verified. See [rule verification](docs/rule_verification.md).
+
 ## Milestone status
 
 - [x] M0 — Repository setup: lint and tests pass in CI on Python 3.11 and 3.12 (PR #1).
 - [ ] M1 — Building model, exporters, and synthetic plans: implemented; external and visual validation remain.
 - [ ] M2 — Compliance engine: partly implemented; remaining tasks below.
 - [ ] M2.5 — Exact DXF/tagged-PDF paths and synthetic demo implemented; independent CAD-drawn test set and acceptance remain.
+- [ ] M2.6 — Life safety plan on exact inputs: not started. The travel-distance method is prototyped outside the repository.
 - [ ] M3 — Segmentation model.
 - [ ] M4 — Vectorization, openings, and rooms.
 - [ ] M5 — OCR and scale recovery.
@@ -44,6 +49,16 @@ Latest local validation: 534 tests passed, including the jurisdiction-independen
 - [ ] M8 — LLM explanations, Q&A, rule drafting, and baselines.
 - [ ] M9 — Results, demo, and write-up.
 - [ ] M10 — Future: Vastu Shastra and Feng Shui guidance layers. Not started; begins after M9.
+
+## Safety net — do before the review fixes
+
+These protect every later change, so they come first. (review, phase 0)
+
+- [ ] Run CI on every branch push, not only on `main` and pull requests. (E1)
+- [ ] Add Python 3.13 to the CI matrix; it is the version used for development. (E2)
+- [ ] Run `make validate-rules`, `make eval` and a JavaScript syntax check in CI. (E3)
+- [ ] Add a coverage gate at 90% with `pytest-cov`, once the author approves the dependency. Coverage was 92% at the review. (E4)
+- [ ] Add property tests that every verdict is unchanged when the model is translated, rotated or mirrored. Write them first and confirm they fail on a rotated T-shaped room before the fix in M2 step 9. (E5)
 
 ## M0 — Finish repository setup
 
@@ -135,6 +150,23 @@ Latest local validation: 534 tests passed, including the jurisdiction-independen
    - [x] Implement `make budget` and generate the budget table under `eval/reports/`.
    - Scope: preliminary synthetic, fixture-conditioned budgets with confidence intervals. Independent author-reviewed/local-code validation remains required before treating these as production extraction or upload thresholds.
 
+9. **Close the verdict defects found in the November 22 review.** (review, phase 1)
+   - [ ] Each check declares in code its element, what it can prove, its parameters and its exceptions. The rule loader rejects a rule file that claims more than the check can prove, or that misnames a check, parameter or filter key, and `make validate-rules` reports it. Today `proves: both` in a rule file makes a fail-only check return `pass`. (A1, A6)
+   - [ ] A plan with no identified entrance returns `unknown` for the entrance obligation, not a pass of "0 of 0". (A3)
+   - [ ] Decide the deep-opening exception through `verdict.py`, using the wall thickness with its uncertainty; return `borderline` when the two limits disagree. (A2)
+   - [ ] Include scale uncertainty in turning space and door maneuvering through one shared helper. An unset scale uncertainty returns `unknown`. Regenerate the accuracy budget afterwards. (A4)
+   - [ ] Test the T-shaped turning space in the room's own wall directions, so a rotated building gets the same verdict. (A5)
+   - [ ] A check that raises an error does not abort the run; the error is reported in coverage. (B1)
+   - [ ] Resolve the open discrepancy in the door maneuvering rule: a front-approach failure is reported as proof, although the side-approach rows of the table need less clearance. See [rule verification](docs/rule_verification.md).
+   - [ ] Add the rule statuses `draft`, `machine_checked` and `author_verified`. The author checks the seven ADA rules against the source and signs them. (F1)
+
+10. **Prepare rules and jurisdictions for real local codes.** (review, phase 2)
+    - [ ] Let an adoption record hold successive adoptions with dates, selected by the permit date. (C1)
+    - [ ] Make the regime a declared property of each ruleset, in place of the literal name `ada_2010`. (C2)
+    - [ ] Limit the country list to India and the USA in one checked-in table; remove hard-coded regions from the page and the proposal code. (C3)
+    - [ ] Give coverage a typed schema, and split `engine.run` into planning, scoping, technical and roll-up steps with no change in behaviour. (C4, C5)
+    - [ ] Require an explicit ruleset on the command line and remove the ADA fallback. (F3)
+
 **Done when:** boundary, metamorphic, and layering tests pass; hand-checked and seeded synthetic plans reproduce expected results for both regimes; reports and BCF export work; and `make budget` generates the accuracy-budget table.
 
 ## M2.5 — Build the first complete demo
@@ -149,13 +181,68 @@ Latest local validation: 534 tests passed, including the jurisdiction-independen
 - [x] Extract candidate site addresses from title-block text and connect the local jurisdiction proposal/confirmation flow (vector PDF/DXF; OCR pending).
 - [ ] Identify the site-plan sheet and title block in a multi-sheet upload, and search them first for location evidence.
 - [ ] Extract the north arrow and plot boundary from exact inputs where drawn, with provenance and uncertainty; record orientation as unknown when absent. The location flow uses the site plan, and M10 depends on orientation.
-- [ ] Author draws the CAD test plans and seeded violations described in specification §7.3, including registration fiducials for scans. Include at least one sheet set with a site plan carrying a location, and one with no location.
+- [ ] Add a DXF importer for a convention a person can draw in ordinary CAD: walls, door blocks with attributes, glazing, room labels, fixtures and corridor centrelines on named layers, with rooms and connectivity derived from the walls. The current importer reads only PlanCheck's own exports, so the author-drawn test set cannot be imported without it. Document the convention in `docs/cad-convention.md` with a template drawing; the author approves it first. (review, D1)
+- [ ] Decide whether the PDF requirement for this milestone is limited to tagged PDFs, leaving ordinary vector PDFs to plan parsing. (review, D1; author decision)
+- [ ] A malformed tagged drawing produces a clear error, not a `KeyError`. (review, B2)
+- [ ] IFC GlobalIds and BCF topic ids are unique to each project and stable across runs. (review, B5, B6)
+- [ ] Author draws the CAD test plans and seeded violations described in specification §7.3, including registration fiducials for scans. Include at least one sheet set with a site plan carrying a location, and one with no location. Include the egress cases M2.6 needs.
 - [ ] Store expected outcomes per element and per rule in `eval/compliance/expected.yaml`.
 - [ ] Reproduce expected verdicts from both DXF and vector-PDF inputs.
 
 The supported semantic DXF/tagged-PDF convention and synthetic demo reproduce every draft expected verdict; ordinary untagged CAD plots and the independent author-drawn set remain outstanding. Raster routing explicitly reports the unimplemented extraction path. See [exact-input demo](docs/exact-input-demo.md). Native PDF assessment reports and external viewer acceptance are also pending.
 
 **Done when:** the seeded set runs end to end from both exact input paths with every expected verdict reproduced.
+
+## M2.6 — Make a life safety plan on exact inputs
+
+Makes a draft life safety plan for one floor from the building model. It needs M2 steps 9 and 10 and the drawable CAD convention from M2.5. The design, the prototype results and the test cases are in Part G of the local working file `miscellaneous/IMPROVEMENT_PLAN.md`.
+
+1. **Specification and inputs.**
+   - [ ] Add this milestone's requirements and acceptance criteria to the specification before implementation, and update §9.6 to the exact shortest-path method.
+   - [ ] Model version 2, with migration of saved models and runs: an exit designation on openings, room function in use, and an optional declared occupant load per room.
+   - [ ] Propose every exterior door as an exit for the user to confirm. Until exits are confirmed, measurements are shown and every verdict that depends on exits is `unknown`.
+   - [ ] Add `configs/space_functions.yaml` and propose a function from each room label; the author approves the list. A room with no function has an `unknown` occupant load.
+
+2. **Walking distance.**
+   - [ ] Add `plancheck/egress/`: the walkable space, a visibility graph over wall corners, the distance to the nearest exit from any point, the most remote point of each room to 1 mm, and the path as a polyline.
+   - [ ] Report the shortest distance and the right-angle distance, with uncertainty that includes scale. A wall-clearance offset is a rule value and stays null until verified.
+   - [ ] Known-answer tests on the four prototype shapes at three rotations, within 1 mm. Property tests: rigid motion does not change the distance, adding an exit never increases it, adding a wall never decreases it.
+   - [ ] Meet a time budget of 2 s for a 30-room floor.
+
+3. **Occupant load.**
+   - [ ] Extend the rule format with area, per-person and count units, and with tables keyed by conditions such as room function, occupancy and sprinkler status. A lookup that matches no row returns `unknown`.
+   - [ ] Compute the occupant load per room from gross or net area as the table states, with uncertainty and the rounding the rule states. Without a verified table, show areas and declared loads only.
+
+4. **Egress network.**
+   - [ ] Build one network per floor from rooms, corridor centrelines, doors and exits.
+   - [ ] Measure common path of travel, dead-end corridor length and the occupant load through each door and exit. The load assignment method is the author's choice and is printed on the sheet.
+   - [ ] Measure the number of exits reachable by separate routes, exit separation against the diagonal of the area served, and exit capacity from door clear widths.
+
+5. **The sheet.**
+   - [ ] Return the analysis as typed results, store it in the saved run, and add what could not be computed to coverage.
+   - [ ] Draw the sheet as SVG: room load tags, exits, paths with lengths, the remote point, common paths, dead ends and separation lines, with the load schedule, the egress summary, a legend, the list of things not shown, and the disclaimer. Meaning is carried by line style and text, not colour alone.
+   - [ ] Write the same content to DXF on its own layers, and add it to the HTML report.
+   - [ ] Add a runnable entry point that goes from a drawn DXF to the sheet.
+
+6. **Evaluation.**
+   - [ ] The author measures travel distance, common path and dead-end length by hand on the egress cases of the CAD test set and records them with tolerances in `eval/egress/expected.yaml`; `make eval` compares.
+   - [ ] Add the egress quantities to the accuracy budget.
+
+**Done when:** for every egress case in the author-drawn set, the sheet is produced from the exact input path, every hand-measured value is reproduced within its tolerance, no verdict appears without a verified ruleset, and the known-answer and property tests pass.
+
+### Stage 2 — check the plan against the adopted code
+
+This stage waits on author-verified values and does not block M3.
+
+- [ ] Author selects one US authority and one Indian authority, and verifies each one's adoption record, code edition and dates from official sources.
+- [ ] Scaffold the egress rule files with null values. The author fills them from their own copy of the adopted code. No code text is stored; each rule keeps the section number, an author-written paraphrase and a link.
+- [ ] Register the checks for travel distance, common path, dead-end length, exit count, exit separation and egress capacity, each declaring what it can prove. Generate boundary tests from the rule values.
+- [ ] Show the findings on the sheet and in reports as building-code findings, provisional until the jurisdiction is confirmed and never merged with ADA findings.
+
+### Later stages
+
+- [ ] More than one floor: stairs, storeys, loads arriving from other floors, and rated walls shown on the sheet.
+- [ ] Audit a life safety sheet drawn by someone else, after plan parsing (M3 to M5).
 
 ## M3 — Train and evaluate segmentation
 
@@ -202,6 +289,9 @@ The supported semantic DXF/tagged-PDF convention and synthetic demo reproduce ev
 - [x] Implement local upload/text extraction, project listing/saving, explicit ADA reference check-run and export-download endpoints.
 - [x] Verify source hashes before checking, retain saved settings and engine/rule provenance, reject stale revisions/downloads, and remove partial outputs after failed runs.
 - [ ] Add asynchronous processing/status endpoints and the production API lifecycle; current local runs are synchronous.
+- [ ] An installed copy of the package runs: ship the rules, configs and web files, resolve data paths in one module, and accept `--host`, `--port` and `--data-dir`. (review, B9)
+- [ ] Choose the API framework and move the local server to it behind a `ProjectStore` interface; FastAPI with uvicorn is recommended, with licences logged before adding. (review, D3; author decision)
+- [ ] In that server: version project files and migrate them, so one unreadable project does not empty the list; return server faults as 500 with a logged reference, not as 400; stream uploads, validate them before storing and clean up afterwards; handle concurrent requests and recover runs left in "processing". (review, B3, B4, B7, B8)
 - [ ] Add the API service to the development stack; implement `make api` and `make up`.
 - [ ] Generate end-to-end metrics with confidence intervals, false passes/fails, and risk–coverage curves, broken out by ruleset and input path.
 
@@ -231,6 +321,11 @@ The supported semantic DXF/tagged-PDF convention and synthetic demo reproduce ev
 - [ ] Send a location to an external geocoder only on an explicit user action, naming the service that will receive it. Extraction alone sends nothing.
 - [ ] For a location with no verified ruleset, save the project, report "local code not checked", and offer only explicitly selected reference comparisons.
 - [ ] Overlay extracted geometry on the source drawing with layer toggles.
+- [ ] Draw the plan with each finding's evidence as SVG, rebuild the HTML report as tables, and show the drawing beside the findings on the page. (review, D2)
+- [ ] Have every check return all the measurements it makes, for the drawing and the review queue. (review, C6)
+- [ ] Replace the `jurisdiction_source` values with plan evidence, user location and user-named, plus a separate confirmed flag, and set the jurisdiction from the web flow so local rules can run from the page. (review, D5)
+- [ ] Choose the front-end structure; React with TypeScript, Vite and Playwright is recommended. Whatever is chosen, warn before discarding unsaved edits on a project switch, and show non-JSON error responses correctly. (review, D4; author decision)
+- [ ] Add the life safety view from M2.6: confirm exits, confirm room functions and declared loads, run, review the sheet beside its tables, and download SVG and DXF. Changing the drawing or these inputs marks the result out of date. The recommended place is inside **Building code**; the author decides between that and a fourth tab.
 - [x] Add optional facility type, occupancy, work type, sprinkler status and manual PDF scale entry to saved check inputs. Missing facts stay unknown; a manual scale must agree with embedded scale on supported tagged PDFs.
 - [ ] Support wall/opening and label edits, plus scale recovery/manual calibration for ordinary or raster drawings.
 - [ ] Rank the review queue by whether uncertainty can change a verdict; re-run checks after corrections.
@@ -309,6 +404,17 @@ Starts after M9. These layers reuse the building model, check engine, reports an
 - Independently hand-checked plans and the CAD-drawn evaluation set.
 - PDF-library licensing decision before adding a copyleft dependency.
 - Dataset access/licence confirmation and external exporter checks.
+- From the November 22 review:
+  - Sign-off on the seven ADA rules, and a decision on the open door-maneuvering discrepancy.
+  - Approval of the drawable CAD convention, and whether M2.5's PDF requirement is limited to tagged PDFs.
+  - The API and front-end frameworks, and approval of `pytest-cov`.
+  - Whether the maneuvering check returns `unknown` for double-leaf doors until the measurement of a pair is confirmed.
+- For the life safety plan (M2.6):
+  - Approval of the room function list.
+  - How occupants are assigned to exits: all to the nearest, or split equally among reachable exits.
+  - Whether the view sits inside the Building code tab or in a fourth tab.
+  - For Stage 2: one US authority and one Indian authority, each with its adopted code and edition, and the egress values read from the author's own copy of that code.
+  - Hand-measured egress values for the CAD test set.
 
 ## Engineering rules
 

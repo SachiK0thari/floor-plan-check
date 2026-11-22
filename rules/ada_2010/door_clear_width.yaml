@@ -44,5 +44,5 @@ jurisdiction: null
 effective_date: 2012-03-15
 superseded_date: null
 amends: null
-verified_by: "Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot"
+verified_by: "Not author-verified. First check: Claude Code, 2026-11-05: values read from the ada.gov text; every quote is machine-matched to the snapshot. Second check: Claude Opus (independent LLM review), 2026-11-22: section numbers, values, units and quotes confirmed against the snapshot; meaning notes are in docs/rule_verification.md"
 status: verified
