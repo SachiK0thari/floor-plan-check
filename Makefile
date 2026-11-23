@@ -8,8 +8,12 @@ endef
 setup:
 	uv sync
 
+# The coverage gate lives here, not in pytest's default options, so running one test file
+# with plain pytest does not trip it. Line and branch coverage of plancheck/ (pyproject.toml).
+COVERAGE_MIN := 90
+
 test:
-	uv run python -m pytest
+	uv run python -m pytest --cov --cov-fail-under=$(COVERAGE_MIN)
 
 lint:
 	uv run python -m ruff check .

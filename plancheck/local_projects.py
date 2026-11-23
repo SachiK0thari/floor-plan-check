@@ -17,11 +17,14 @@ from plancheck.jurisdiction.location_evidence import LocationExtraction
 from plancheck.jurisdiction.proposal import ProjectSettings, availability
 from plancheck.jurisdiction.resolve import load_adoption_records
 from plancheck.model.types import ProjectContext
-from plancheck.pipeline import process
+from plancheck.pipeline import process, write_reports
+from plancheck.rag.client import LLMClient
+from plancheck.rag.explain import ExplanationRun, explain_run
 
 DOWNLOADS = {
     "report.html": "text/html; charset=utf-8",
     "report.md": "text/markdown; charset=utf-8",
+    "plan.svg": "image/svg+xml",
     "run.json": "application/json",
     "model.ifc": "application/octet-stream",
     "model.dxf": "application/dxf",
@@ -43,6 +46,8 @@ class RunResult(BaseModel):
     revision: int
     source_sha256: str
     report: Report
+    # Added only when the user asks for them; never part of a verdict.
+    explanations: ExplanationRun | None = None
 
 
 class LocalProject(BaseModel):
@@ -225,6 +230,24 @@ class LocalProjects:
             project.error = str(error)
             self._write(project)
             raise
+        return self._write(project)
+
+    def explain(self, project_id: UUID, run_id: UUID, client: LLMClient) -> LocalProject:
+        """Explain the current run's findings and rewrite its reports to include them."""
+        project = self.get(project_id)
+        current = project.check_results
+        if (
+            project.requires_new_run
+            or current is None
+            or current.id != run_id
+            or current.revision != project.revision
+        ):
+            raise ValueError("Results are stale or unavailable. Run checks for the saved revision.")
+        output = self.folder / str(project_id) / "runs" / str(run_id)
+        artifact = CheckRunArtifact.load(output / "run.json")
+        explanations = explain_run(artifact, client)
+        write_reports(artifact, output, explanations)
+        project.check_results = current.model_copy(update={"explanations": explanations})
         return self._write(project)
 
     def download(self, project_id: UUID, run_id: UUID, filename: str) -> Path:

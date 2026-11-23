@@ -58,7 +58,11 @@ profiles. Turns and passing-space provisions remain surfaced as unchecked.
 Each width, run length, and separation becomes `Measured(source="geometry")`.
 The absolute uncertainty is conservatively twice the existing `geometry_sigma`
 proxy (maximum wall-thickness uncertainty); relative scale uncertainty is combined
-in quadrature. This is a provisional model-wide proxy, not a recovered covariance
+in quadrature. Adding the two wall faces linearly treats their errors as fully
+correlated, which is the conservative choice. It is the project's convention for
+every length measured between wall faces (decided November 23, 2026); turning space
+and door maneuvering adopt it with review item A4 in the
+[implementation plan](IMPROVEMENT_PLAN.md). This is a provisional model-wide proxy, not a recovered covariance
 model for wall vertices. As with other checks, absent scale uncertainty is treated
 as zero; importers must supply meaningful uncertainty for non-exact inputs.
 

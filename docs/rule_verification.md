@@ -4,7 +4,7 @@ This file records who has checked the rule files under `rules/` against their so
 
 ## Status
 
-**No ADA rule has been verified by the author.** Both checks below were done by language models. They do not meet the "author-verified" requirement in [PRD.md](../PRD.md); they are evidence for the author's own check, not a replacement for it.
+**No ADA rule has been verified by the author.** Both checks below were done by language models. They do not meet the "author-verified" requirement in the [implementation plan](IMPROVEMENT_PLAN.md); they are evidence for the author's own check, not a replacement for it.
 
 | Check | Date | Done by | Method |
 |---|---|---|---|

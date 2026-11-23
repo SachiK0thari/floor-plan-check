@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 
 from plancheck.compliance.artifacts import CheckRunArtifact
-from plancheck.evaluation.plans import review_plans
+from plancheck.evaluation.plans import review_plans, sample_office_plan
 from plancheck.evaluation.validate import signatures
 from plancheck.export.dxf import export_dxf
 from plancheck.ingest.vector_pdf import export_vector_pdf
@@ -29,6 +29,23 @@ def generate_demo(output: Path) -> None:
             artifact = CheckRunArtifact.load(result / "run.json")
             if signatures(artifact.report) != expected["plans"][name]:
                 raise ValueError(f"{name}/{kind} does not match expected verdicts")
+    # A multi-room sample to look at. It has no expected verdicts; the two exact input
+    # paths must still agree with each other on every finding.
+    folder = output / "sample-office"
+    folder.mkdir(exist_ok=True)
+    sample = sample_office_plan()
+    (folder / "project.json").write_text(sample.project.model_dump_json(indent=2))
+    results = [
+        signatures(
+            CheckRunArtifact.load(process(path, folder / kind, sample.project) / "run.json").report
+        )
+        for kind, path in (
+            ("dxf", export_dxf(sample, folder / "source.dxf")),
+            ("pdf", export_vector_pdf(sample, folder / "source.pdf")),
+        )
+    ]
+    if results[0] != results[1]:
+        raise ValueError("sample-office: the DXF and PDF paths disagree")
     (output / "README.txt").write_text(
         "Synthetic analytic demo. All exact-path signatures matched.\n"
         "Author hand-checks, independent CAD plots, "

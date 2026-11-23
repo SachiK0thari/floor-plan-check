@@ -1,0 +1,24 @@
+# Explanations of findings, written by a language model (docs/PROJECT_SPEC.md §10).
+# The model never decides a verdict and never writes a number; see plancheck/rag/explain.py.
+# The API key is read from the OPENROUTER_API_KEY environment variable or the .env file.
+
+service: "OpenRouter (openrouter.ai)"
+base_url: "https://openrouter.ai/api/v1"
+
+# A dated model version, so stored explanations can be traced to the model that wrote them.
+model: "deepseek/deepseek-v4.1-flash-1017"
+
+timeout_s: 60
+max_output_tokens: 2000
+
+# The model's own reasoning step. Off: measured on November 23, 2026 on the seven-room
+# sample, three runs each way. Off took 3 to 5 s with no failed call and no rejection;
+# on took 14 to 26 s, and one run in three had a reply that spent the whole output limit
+# on reasoning and returned no text. The wording was of the same quality.
+reasoning: false
+
+# How many times the model may try one explanation before the finding is left unexplained.
+max_attempts: 2
+
+# Findings with these verdicts are explained.
+verdicts: [fail, borderline, unknown]

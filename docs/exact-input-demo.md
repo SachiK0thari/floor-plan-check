@@ -3,7 +3,14 @@
 Run `make demo`, then open `out/demo/wide/dxf/report.html`. Each of the `wide`,
 `narrow`, and `missing` folders contains a CAD drawing, tagged vector-PDF plot,
 project-context JSON, and results from both input paths. Every output folder has a
-saved run, readable HTML/text report, IFC, BCF issue archive, DXF, and GLB.
+saved run, readable HTML/text report, the plan drawing with findings (`plan.svg`), IFC,
+BCF issue archive, DXF, and GLB.
+
+`out/demo/sample-office/` holds a seven-room synthetic office suite to look at. It has
+no expected verdicts; `make demo` only requires that its DXF and PDF paths agree on
+every finding. Its door clear widths are declared in the model, and three conditions are
+seeded: a narrow door, a door within its measurement uncertainty of the minimum, and an
+entrance too close to a corner.
 
 ```sh
 make demo

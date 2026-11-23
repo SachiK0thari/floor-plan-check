@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from plancheck.jurisdiction.proposal import propose
 from plancheck.jurisdiction.resolve import load_adoption_records
 from plancheck.local_projects import DOWNLOADS, LocalProjects, SaveRequest
+from plancheck.rag.client import LLMClient, default_client, explainer_status
 
 ROOT = Path(__file__).resolve().parent.parent
 STORE = ROOT / "out" / "projects"
@@ -30,6 +31,17 @@ class RunRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: UUID
     revision: int = Field(ge=1)
+
+
+class ExplainRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: UUID
+    run_id: UUID
+
+
+def explainer() -> LLMClient:
+    """The language-model client. Tests replace this function with a stand-in."""
+    return default_client()
 
 
 class LocalServer(HTTPServer):
@@ -79,7 +91,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         projects = LocalProjects(STORE)
         try:
-            if self.path == "/":
+            # The page reads its own query string (?project=<id>); routing ignores it.
+            if urlsplit(self.path).path == "/":
                 self.send_bytes(
                     (ROOT / "web" / "index.html").read_bytes(), "text/html; charset=utf-8"
                 )
@@ -89,6 +102,8 @@ class Handler(BaseHTTPRequestHandler):
                 )
             elif self.path == "/api/projects":
                 self.reply([p.model_dump(mode="json") for p in projects.list()])
+            elif self.path == "/api/explainer":
+                self.reply(explainer_status())
             elif self.path == "/api/authorities":
                 self.reply([r.model_dump(mode="json") for r in load_adoption_records()])
             elif self.path.startswith("/api/download/"):
@@ -130,6 +145,12 @@ class Handler(BaseHTTPRequestHandler):
                 )
             elif self.path == "/api/save":
                 project = projects.save(SaveRequest.model_validate(body))
+                self.reply(project.model_dump(mode="json"))
+            elif self.path == "/api/explain":
+                # Sends finding data, with no drawing text, to the named service. It runs
+                # only on this explicit request from the page.
+                request_explain = ExplainRequest.model_validate(body)
+                project = projects.explain(request_explain.id, request_explain.run_id, explainer())
                 self.reply(project.model_dump(mode="json"))
             elif self.path == "/api/run":
                 request_run = RunRequest.model_validate(body)

@@ -93,6 +93,59 @@ def review_plans() -> dict[str, BuildingModel]:
     }
 
 
+def sample_office_plan() -> BuildingModel:
+    """A seven-room office suite for demonstrations. Synthetic; not an author-drawn plan.
+
+    The layout comes from the synthetic generator with 36 in door leaves. Door clear
+    widths are declared in the model, as a door schedule would give them; they are not
+    derived from a deduction. Three conditions are seeded so that each kind of result
+    appears: a narrow toilet-room door (fail), an office door whose measured clear width
+    is within its uncertainty of the minimum (borderline), and the generator's own
+    entrance, which sits too close to a corner for its pull-side clearance (fail).
+    """
+    from plancheck.synthetic.generator import SyntheticConfig, generate_model
+
+    base = generate_model(3, SyntheticConfig(leaf_widths_mm=(914.4,), max_rooms=7))
+    labels = {
+        "R01": ("OPEN OFFICE", "office"),
+        "R04": ("STORE", "storage"),
+        "R06": ("RECEPTION", "reception"),
+    }
+    rooms = [
+        room.model_copy(update={"label": labels[room.id][0], "room_type": labels[room.id][1]})
+        if room.id in labels
+        else room
+        for room in base.rooms
+    ]
+    seeded: dict[str, dict[str, Measured]] = {
+        # A 30 in leaf in place of a 36 in one.
+        "D04": {"width": exact(812), "leaf_width": exact(762), "clear_width": exact(710)},
+        # Measured on site with a tape: 815 mm, give or take 5 mm.
+        "D01": {"clear_width": Measured(value_mm=815, sigma_mm=5, source="user")},
+    }
+    openings = [
+        opening.model_copy(update=seeded.get(opening.id, {"clear_width": exact(860)}))
+        if opening.kind == "door"
+        else opening
+        for opening in base.openings
+    ]
+    return BuildingModel.model_validate(
+        base.model_copy(
+            update={
+                "rooms": rooms,
+                "openings": openings,
+                "project": ProjectContext(
+                    facility_type="commercial_facility",
+                    work_type="new",
+                    permit_date=date(2026, 1, 1),
+                ),
+                "scale_source": "exact",
+                "scale_rel_sigma": 0,
+            }
+        ).model_dump()
+    )
+
+
 def transform_model(
     model: BuildingModel,
     *,

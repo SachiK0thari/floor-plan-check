@@ -1,4 +1,4 @@
-"""The engine does not depend on any one jurisdiction or country (PRD M2 step 7).
+"""The engine does not depend on any one jurisdiction or country (plan M2 step 7).
 
 Two synthetic authorities in different countries are added purely as data: an adoption
 record chain under a configs folder and a local ruleset under a rules folder. Nothing in

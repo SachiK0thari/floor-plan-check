@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
 
 jobs:
@@ -10,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -20,3 +19,6 @@ jobs:
       - run: uv sync --locked
       - run: make lint
       - run: make test
+      - run: make validate-rules
+      - run: make eval
+      - run: node --check web/app.js

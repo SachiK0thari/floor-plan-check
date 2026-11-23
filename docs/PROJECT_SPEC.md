@@ -1,6 +1,6 @@
 # PlanCheck — Floor Plan to Structured Model + Code Compliance Checker
 
-> **How to use this file:** Save it as `docs/PROJECT_SPEC.md`. Keep the short companion file (`PRD.md`) to §16 (engineering rules), the Status checklist, and a pointer to this file. `PRD.md` is the project's instruction file (there is no `CLAUDE.md`), so the whole spec never goes there. Claude Code should work through the milestones **in order**, finish each milestone's acceptance criteria before moving on, and keep the Status checklist up to date.
+> **How to use this file:** This is the requirements specification. The file to work from is [`IMPROVEMENT_PLAN.md`](IMPROVEMENT_PLAN.md) in this folder. It holds the engineering rules from §16, the milestone checklist, the open decisions and the design for each open task, and it is the project's instruction file (there is no `CLAUDE.md` and no `PRD.md`). Claude Code should work through the milestones **in order**, finish each milestone's acceptance criteria before moving on, and keep the checklist in that file up to date.
 >
 > Code facts in this file (section numbers, dimensions, edition changes) are orientation for the author. They are **not** rule params. Every param still goes through the verification step in §9 and M2.
 
@@ -14,7 +14,11 @@ PlanCheck takes a floor plan (scanned image or PDF), converts it into a **struct
 
 **The jurisdiction comes from the building's location, and no region is special.** It is derived per project, first from the uploaded plan (site plan or title block) and otherwise from a location the user gives, then confirmed by the user (§3.2). No jurisdiction is a default or a required first target.
 
+**The scope for now is India and the USA** (decided November 22, 2026). Location lookup, the country list, code families and test data are built for these two countries only. The design stays country-agnostic, and within the two countries no state, city or authority is a default. Where this specification says "any country", read it as India or the USA until the author widens the scope.
+
 Within each project the user chooses what to check from three tabs: **Building code** (the regulatory checks above), and, as a future guidance layer, **Vastu Shastra** and **Feng Shui** (M10). Guidance layers are not codes and never affect a regulatory verdict.
+
+PlanCheck can also **make a draft life safety plan** from the building model: occupant loads, exits, egress paths with travel distance, common path of travel, dead ends, exit separation and exit capacity, drawn as a sheet with tables (§9.8, M2.6). It is a draft for the designer to review, not a permit-ready sheet.
 
 It combines two ideas:
 1. **Floor plan → 3D/structured model** (computer vision + geometry).
@@ -46,6 +50,7 @@ Portfolio framing for an **AI Engineer** role, author has **Architecture (underg
 7. Evaluate extraction and compliance separately and end-to-end.
 8. Report coverage with every result: which provisions were checked, which were not applicable, and which cannot be checked from a plan.
 9. Compare against a "just ask a multimodal LLM" baseline, so the architecture is justified by a measurement (§11.5).
+10. Make a draft life safety plan for one floor from the building model, and check its quantities against the adopted code once an author-verified ruleset exists (§9.8).
 
 ### Non-goals (for v1)
 - ADA checks on private single-family houses. The ADA Standards do not apply to them (§3.0).
@@ -53,8 +58,9 @@ Portfolio framing for an **AI Engineer** role, author has **Architecture (underg
 - Structural, MEP, or fire-rating checks.
 - Legal certification — the README and UI must say this is a **design-assist tool, not a code review**, and the applicable code edition depends on the jurisdiction.
 - Hand sketches (clean drawings and scans only).
-- Broad jurisdiction coverage. The design supports any number of jurisdictions in any country, but v1 ships verified adoption records and rules for only the one or two the author verifies; the first may be anywhere. Automatic location lookup exists only for countries with an approved provider (the U.S. Census geocoder first); elsewhere the user names the authority. A location without a verified ruleset is saved and reported as "local code not checked".
+- Broad jurisdiction coverage. The design supports any number of jurisdictions, but the scope for now is India and the USA (§1), and v1 ships verified adoption records and rules for only the one or two the author verifies; the first may be anywhere in those two countries. Automatic location lookup exists only for countries with an approved provider (the U.S. Census geocoder first); elsewhere the user names the authority. A location without a verified ruleset is saved and reported as "local code not checked".
 - Vastu Shastra and Feng Shui guidance in v1. They are a future milestone (M10), after M9; their tabs appear in M7 as not yet available.
+- A permit-ready life safety sheet. The sheet is a draft for one floor. Rated walls, sprinklers, alarms, signage, stairs and exit discharge are listed on it as not shown (§9.8).
 
 ---
 
@@ -81,7 +87,7 @@ The tool must get applicability right before it measures anything. Four facts sh
 
 PlanCheck also checks the plan against the building code **as adopted by the project's own jurisdiction**.
 
-**The jurisdiction is a property of each plan, not of the tool, and no region is special.** There is no application-wide default authority, and no country or region is the required first target. The jurisdiction is derived from the building's location, in this order:
+**The jurisdiction is a property of each plan, not of the tool, and no region is special.** There is no application-wide default authority, and no country or region is the required first target. The current scope is India and the USA (§1): the interfaces stay country-agnostic, but location providers, the country list and test data are built for those two only. The jurisdiction is derived from the building's location, in this order:
 
 1. **From the uploaded plan.** A site plan or title block usually carries the location. The application identifies the site-plan sheet and title block in a multi-sheet upload and searches them first (M2.5 for vector text, M5 for OCR, M8 optionally with an LLM that only proposes). It keeps candidate addresses, country/state/city names and any named planning authority, each with source-page and evidence-location provenance, shows the evidence highlighted on the sheet, proposes the responsible authority, and the user confirms or corrects it.
 2. **From the user's location.** When the plan has no usable location, or the evidence is missing, ambiguous or conflicting, the application asks where the building is: an address, a city/region/country, or a point on a map. It resolves the authority from that answer. The user should not need to know the authority's name.
@@ -194,10 +200,13 @@ class Opening:     id, kind: Literal["door","window","opening"], wall_id,
                    hinge_at: Literal["start","end"] | None,    # which end of the opening, in wall direction
                    swings_to: Literal["left","right"] | None,  # side of the directed wall the leaf opens into
                    tag: str | None,                       # door mark, links to a door schedule if one is drawn
+                   exit_role: Literal["exit","not_an_exit"] | None,  # model version 2 (§9.8); None = nobody has said
                    confidence
 class Room:        id, boundary: list[Point],             # to wall centerlines (gross)
                    clear_polygon: list[Point],            # to wall faces (net); compliance uses this one
                    label: str | None, room_type: str | None, space_function: str | None,
+                   corridor_paths: list[list[Point]],     # travel paths covering every corridor arm
+                   declared_occupants: int | None,        # model version 2 (§9.8); replaces the calculated load
                    area_net_m2, area_gross_m2,            # computed from the polygons, never stored
                    confidence
 class Fixture:     id, kind, footprint: list[Point], room_id, confidence   # toilets, lavatories, casework; may be empty in v1
@@ -209,15 +218,20 @@ class ProjectContext:                                     # user-entered; jurisd
         # M7 replaces these with the §3.2 paths (plan evidence, user location,
         # user-named authority) plus a separate confirmed flag
     country: str | None,   # ISO 3166-1 alpha-2; adoption records match on country + authority_id
+    region: str | None, city: str | None, planning_authority: str | None,
+    ada_reference: bool,   # ADA run as an explicitly selected reference comparison
     facility_type: str | None, occupancy: str | None,
     sprinklered: bool | None, work_type: Literal["new","alteration","existing"] | None,
     permit_date: date | None
 class BuildingModel:
+    schema_version: int,                                  # 1 today; 2 adds exit_role and declared_occupants, with a migration
     source_image, image_to_model: Affine | Homography,    # full transform, not one scalar
     px_per_mm: float, scale_rel_sigma: float, scale_x_over_y: float,
     scale_source: Literal["exact","pdf_vector","dimensions","room_areas","scale_bar","user"],  # exact = DXF or synthetic
     project: ProjectContext,
-    walls, openings, rooms, fixtures, dimensions, graph, warnings, model_versions
+    walls, openings, rooms, fixtures, dimensions, graph,
+    location_extraction,                                  # unconfirmed location hints read from the drawing (§3.2)
+    warnings, model_versions
 ```
 
 `ProjectContext` is what applicability and local building code rules filter on (§3.0, §3.2). It is user input, with one exception: the jurisdiction may be proposed from `site_address` (§3.2) and is then marked as proposed until the user confirms it.
@@ -238,7 +252,6 @@ Design notes on this contract:
 
 ```
 plancheck/
-├── PRD.md                          # short: §16 rules, status, pointer to the spec
 ├── README.md
 ├── pyproject.toml
 ├── Makefile
@@ -249,9 +262,11 @@ plancheck/
 │   ├── door_catalog.yaml           # nominal door sizes per drawing region (§8.1 step 4)
 │   ├── dxf_layers.yaml             # layer name → element type, for DXF import
 │   ├── verdict.yaml                # guard factor k (§9.3), clear-width deductions (§8.1)
+│   ├── space_functions.yaml        # PlanCheck's own room-function ids (§9.8)
 │   └── jurisdictions/              # one adoption record per known jurisdiction (§3.2)
 ├── docs/
 │   ├── PROJECT_SPEC.md             # this file
+│   ├── IMPROVEMENT_PLAN.md         # the file to work from: rules, checklist, decisions, design notes
 │   ├── code_sources.md             # per source: publisher, terms, what may be stored
 │   ├── data_sources.md             # per dataset: license, what it may be used for
 │   └── dependencies.md             # per dependency: license, why it was accepted
@@ -273,7 +288,8 @@ plancheck/
 │   ├── scale/
 │   ├── rooms/                      # polygons, adjacency graph
 │   ├── model/types.py
-│   ├── export/                     # dxf.py, ifc.py, gltf.py, bcf.py
+│   ├── export/                     # dxf.py, ifc.py, gltf.py, bcf.py, svg.py
+│   ├── egress/                     # walking distance, occupant load, egress network, life safety sheet (§9.8)
 │   ├── compliance/
 │   │   ├── registry.py             # loads + validates rule YAML, resolves layering
 │   │   ├── scoping/                # which elements must comply
@@ -291,6 +307,7 @@ plancheck/
 ├── eval/
 │   ├── extraction/
 │   ├── compliance/
+│   ├── egress/                     # hand-measured egress values for the CAD test set (§9.8)
 │   ├── rag/
 │   └── reports/
 └── tests/
@@ -319,6 +336,7 @@ plancheck/
   - Include **near-threshold cases** on both sides (a door one nominal size below the minimum, and one at it). Cases far from the threshold test nothing but the plumbing.
   - Include plans where the right answer is `unknown` or `not_applicable`, so those verdicts are tested too.
 - At least 5 of the seeded plans target **local building code** rules, including one case where the local amendment and the base rule it amends give different answers, and one where the building code and the ADA disagree on the same element. Expected outcomes are recorded per ruleset.
+- At least four of the CAD-drawn plans are **egress cases** for the life safety plan (§9.8): a single-exit floor, a two-exit floor with a corridor, one with a dead end, and one with a room large enough to need two exits. The author measures travel distance, common path and dead-end length by hand on each and records them with tolerances in `eval/egress/expected.yaml`.
 - **Synthetic plans (M1) are for unit tests, not for headline numbers.** A generator and a pipeline written by the same person share assumptions (straight walls, clean lines, one door symbol). Testing one on the other overstates accuracy; the inverse-problems literature calls this the "inverse crime". Randomize the rendering style to reduce it, and keep synthetic results in their own table.
 
 ---
@@ -461,6 +479,7 @@ otherwise         →  borderline
 
 Maximum requirements mirror this. This is the guard-band rule that metrology uses for conformity decisions (ISO 14253-1): you may only claim conformance when the measurement is inside the limit by more than its uncertainty, and only claim non-conformance when it is outside by more than its uncertainty. `k` is one config value (`configs/verdict.yaml`, default 2), and the borderline rate as a function of `k` is a reported curve (§11.3).
 
+- **Combining uncertainties.** The uncertainties of the wall faces a length runs between add linearly, which treats them as fully correlated and is the conservative choice (decided November 23, 2026). That sum combines in quadrature with scale uncertainty and any other independent term. A model whose scale uncertainty has not been established gives `unknown`; it is never measured as if exact.
 - Exact inputs (DXF, vector PDF, user-entered values) have small σ, so the same rule gives crisp answers there and cautious answers on scans with no special cases.
 - A missed violation costs more than a false alarm. If one side must be favored, widen the guard band on the pass side only.
 - **Combining verdicts** uses three-valued logic. A route passes if every door on it passes; it fails if any door fails; otherwise it takes the weakest of `borderline` and `unknown`. Write this once in `verdict.py` and test it.
@@ -522,19 +541,23 @@ Amendment structure is validated first, then evaluated against the project durin
 | `accessible_route_exists` | Route from an accessible entrance to each obligated space | fail_only | Path in the room graph through doors that pass, combined with three-valued logic (§9.3). Steps and level changes are not visible on a plan, so a found route is not proof. |
 | `egress_travel_distance` | Longest path of travel to an exit | see text | See below. |
 | `occupant_load` | Occupants per space and in total | both | Area ÷ load factor by `space_function`. The factor says whether to use gross or net area; using the wrong one is the classic error. This is a derived quantity that other checks consume, not a pass/fail on its own. |
+| `common_path`, `dead_end_length`, `exit_count`, `exit_separation`, `egress_capacity` | The other life safety quantities | each declares its own | See §9.8. `common_path` is `fail_only` until the author has compared it with hand-measured examples. |
 | `room_min_area` / `room_min_dimension` | Habitable room size (IBC-style, paraphrased) | both | Uses `clear_polygon`. |
 
 **T-shaped turning space.** Whether a T fits in a polygon is a placement problem over position and rotation, and shapely has no Minkowski operations. Do it on a raster: rasterize `clear_polygon` at 10 mm per cell and erode it with a T-shaped kernel; any surviving cell is a valid placement. Repeat for the four axis-aligned rotations, plus the room's dominant angle if it is not orthogonal. A useful identity: eroding by a union of shapes equals intersecting the erosions by each shape, so the T can be handled as two rectangles. The grid resolution adds a known ±10 mm to σ.
 
-**Egress travel distance.** The original approach (room centers joined in a graph) underestimates the distance from the most remote point. For a requirement with a maximum, underestimating produces false passes, which is the unsafe direction. Compute it properly instead; it is not harder:
+**Egress travel distance.** Joining room centers in a graph underestimates the distance from the most remote point. For a requirement with a maximum, underestimating produces false passes, which is the unsafe direction. Compute it exactly. An earlier version of this section used a raster distance transform; the method below replaced it on November 22, 2026, because it needs no extra dependency and has no grid error.
 
-1. Rasterize the free floor area (all `clear_polygon`s joined through door openings).
-2. Run a multi-source geodesic distance transform from all exit doors (fast marching, or `skimage.graph.MCP_Geometric`). This gives the walking distance from **every** point at once.
-3. The maximum of that field is the travel distance, and its location is the most remote point. Draw both, and draw the path.
+1. **Walkable space.** Join every room's `clear_polygon` through the gap of each door and cased opening, then subtract fixture footprints. Windows are not passable.
+2. **Visibility graph.** The shortest path between two points in a plan is a chain of straight segments that bends only at wall corners. Take one node per exit and one per corner of the walkable space that points into it, and join two nodes when the straight segment between them stays inside the walkable space.
+3. **Distance to an exit.** Run Dijkstra from all exits at once. The distance from any point is the smallest of `distance(node) + straight distance to that node` over the nodes visible from it.
+4. **Most remote point.** Search each room by subdividing squares and discarding those that cannot beat the current best, to a tolerance of 1 mm. The tolerance is part of the measurement's uncertainty. Draw the point and the path.
 
-Report two numbers: the geodesic distance (shortest possible path; a lower bound) and a rectilinear distance (paths at right angles, which is how reviewers commonly measure when the furniture layout is unknown; conservative). The rectilinear one is the same transform with 4-connected steps on a grid aligned to the building's dominant axes. Under the limit on the rectilinear number is `pass`. Over the limit on the geodesic number is `fail`. Between the two is `borderline`. The limit itself depends on occupancy and on `sprinklered`, so a missing value gives `unknown`.
+Report two numbers: the shortest distance (the least anyone could walk; a lower bound) and a right-angle distance (the same path measured as |Δx| + |Δy| per segment in the building's dominant direction, which is how reviewers commonly measure when the furniture layout is unknown; conservative). At or under the limit on the right-angle number is `pass`. Over the limit on the shortest number is `fail`. Between the two is `borderline`. Both go through the verdict functions. The limit itself depends on occupancy and on `sprinklered`, so a missing value gives `unknown`.
 
-The same distance field gives three more egress quantities for almost no extra code, as stretch rules if the jurisdiction layer needs them: common path of travel, dead-end corridor length, and exit separation (distance between exits compared with a fraction of the space's diagonal). Section numbers for these move between IBC editions; the author looks them up for the adopted edition.
+Reviewers measure the path a set distance clear of walls and corners. That distance is a code value, so it is a rule parameter, null until verified. While it is null the path touches corners, the result is labelled as a lower bound, and it can support `fail` but not `pass`.
+
+Common path of travel, dead-end corridor length, exit count, exit separation and exit capacity were stretch items in earlier versions of this specification. The life safety plan (§9.8) now measures all of them. Section numbers for these move between IBC editions; the author looks them up for the adopted edition.
 
 Local building code rules reuse these check types with their own params. Add a new check type only when a local provision can't be expressed with an existing one, and give it the same tests.
 
@@ -543,11 +566,66 @@ Local building code rules reuse these check types with their own params. Add a n
 - **Boundary fixtures, generated from the rule.** For each rule, build fixtures at the requirement minus 1 mm, exactly at it, and plus 1 mm, with σ = 0, reading the threshold from the rule file. Do not hard-code sizes: a 900 mm door and a 1000 mm door are probably on the same side of the threshold, so that pair tests nothing. Then repeat with σ > 0 to test all three outcomes of §9.3.
 - **Metamorphic tests** (property-based, with Hypothesis). These need no known answers, only relations that must hold:
   - Translating, rotating, or mirroring the whole model never changes a verdict.
-  - Widening a door never turns a pass into a fail. Adding a wall never turns a failed turning space into a pass. Moving an exit closer never increases travel distance.
+  - Widening a door never turns a pass into a fail. Adding a wall never turns a failed turning space into a pass. Moving an exit closer or adding an exit never increases travel distance; adding a wall never decreases it.
   - Converting the model to inches and back gives identical verdicts.
   - Increasing σ never turns `borderline` into `pass` or `fail`.
 - **Layering tests** (§11).
 - **Hand-checked plans.** Three small plans whose every result the author has worked out by hand, kept as golden files.
+
+### 9.8 Life safety plan
+
+Added on November 22, 2026 and built in M2.6. A life safety plan is the sheet in a permit set that shows how people get out of the building: how many people each space holds, where the exits are, how far the longest walk to an exit is, and whether the exits are numerous, wide and far apart enough. PlanCheck **makes** a draft of that sheet from the building model, and then **checks** the same quantities against the adopted code. The design, the prototype results and the test cases are in Part G of [IMPROVEMENT_PLAN.md](IMPROVEMENT_PLAN.md).
+
+The output is a draft egress analysis for the designer to review. It is not a permit-ready sheet, and it carries the design-assist disclaimer.
+
+| Stage | What it delivers | Needs |
+|---|---|---|
+| 1. Make | Occupant loads, exit paths, travel distance, common path, dead ends, exit separation and exit capacity for one floor, drawn as a sheet with tables | The building model only; no ruleset and no jurisdiction |
+| 2. Check | The same quantities compared with code limits, as building-code findings | An author-verified ruleset for the project's confirmed authority |
+| 3. More than one floor | Stairs, storeys, loads arriving from other floors, rated walls shown on the sheet | A model that holds several floors |
+| 4. Audit | Read a sheet drawn by someone else and compare its stated numbers with computed ones | Plan parsing (M3–M5) |
+
+Stages 1 and 2 are specified here. Stages 3 and 4 are later work, and the design must not block them.
+
+**Inputs.** The model moves to version 2, with a migration for saved models and runs (§5).
+
+- **Exits.** Every door with a graph edge to the exterior is proposed as an exit, and the user confirms or changes the list. Until the list is confirmed, measurements are shown and every verdict that depends on exits is `unknown`. A model with no exit reports that; it never passes silently.
+- **Room function.** `Room.space_function` holds an id from `configs/space_functions.yaml`, PlanCheck's own list, which the author approves. A function is proposed from the room label and confirmed by the user. A room with no function has an `unknown` occupant load, never a default.
+- **Declared occupant load.** A number the designer sets for a room (fixed seating, a posted limit) replaces the calculated one and is labelled as declared.
+
+**Quantities.** `plancheck/egress/` measures; it never decides.
+
+| Quantity | How it is measured |
+|---|---|
+| Occupant load | Area ÷ area per person, per room. The factor, whether it applies to gross or net area, and the rounding all come from the ruleset's table for the room's function. With no verified table, only areas and declared loads are shown. |
+| Travel distance | As in §9.6: the shortest and the right-angle distance from the most remote point of each room to its nearest exit, with the path. |
+| Common path of travel | The first part of that path, up to the first place with two ways out. "Two ways out" is defined on the egress network (rooms, corridor centrelines, doors and exits): two routes to two different exits that share no door and no centreline segment. The result is the earliest place the routes could separate, so it is a lower bound. |
+| Dead-end length | Along the corridor centreline, from the junction with two ways out to the end of a branch that reaches no exit. A corridor without centrelines gives `unknown`. |
+| Number of exits | The confirmed exits a room or the floor can reach by separate routes. |
+| Exit separation | The distance between two exits, against the diagonal of the area served. Where on a door to measure from, whether the distance may follow a corridor, and the required fraction are rule values. |
+| Exit capacity | A door's clear width ÷ the width required per occupant, against the occupant load assigned to that door. The assignment method (all to the nearest exit, or split among reachable exits) is the author's choice and is printed on the sheet. |
+
+Every length carries uncertainty that includes scale (§9.3). An occupant count carries a low and a high value from the area uncertainty, so a threshold that falls between them gives `borderline`.
+
+**Rule format.** These rules need more than a single length (§9.1): units for area, area per person, width per person and a count, each with an exact conversion; and named tables whose rows are keyed by conditions such as room function, occupancy and sprinkler status. A lookup that matches no row returns `unknown` and names the missing condition. The codes involved are copyrighted, so these rules store the section number, an author-written paraphrase and a link, and no code text. With nothing for the quote check to match, such a rule is either a draft or author-verified.
+
+**The sheet.** One typed sheet object is the input to every output format: SVG first, the same content in DXF on its own layers, and a section of the HTML report.
+
+- **On the plan:** each room's function, area, area basis, load factor and occupant load; each exit with its clear width, capacity and assigned load; egress paths with lengths and the most remote point; common paths; dead ends; exit separation lines.
+- **Beside the plan:** the project basis (occupancy, sprinkler status, code, edition, authority, and whether the ruleset is author-verified), the occupant load schedule, and the egress summary. With no verified ruleset the "required" column reads "not checked" and no verdict is shown.
+- **Not shown:** a fixed list of rated walls and doors, sprinklers, alarms, extinguishers, exit signs, emergency lighting, stairs, areas of refuge, door hardware and furniture. It is fixed text, so the sheet never implies they were considered.
+- Line style and text carry the meaning; colour is an addition. Drawing text is escaped.
+- The analysis is returned as typed results and stored with its inputs in the saved run, so the sheet can be regenerated. What could not be computed, and why, goes into coverage (§9.4).
+
+**Checking (Stage 2).** Travel distance, common path, dead-end length, exit count, exit separation and egress capacity are ordinary checks (§9.6). Each declares what it can prove, and boundary tests are generated from the rule values (§9.7). Egress findings belong to the building-code regime: they run only under a confirmed adoption chain, are provisional otherwise, and are never merged with ADA findings. Nothing is checked until an author-verified ruleset exists for the project's confirmed authority. The first two are one US authority and one Indian authority of the author's choosing.
+
+**Tests and limits.**
+
+- Known-answer tests on shapes with hand-computed distances, at three rotations, within 1 mm.
+- Property tests: a rigid motion does not change a distance; adding an exit never increases it; adding a wall never decreases it.
+- A time budget of 2 s for a 30-room floor.
+- The author hand-measures travel distance, common path and dead-end length on the egress cases of the CAD test set (§7.3). `make eval` compares them, and the egress quantities join the accuracy budget (§11.1).
+- One floor at a time. Furniture and low partitions are not in the model, which is why two distances are reported. The tool does not design: it does not place exits, rate walls or choose protection systems.
 
 ---
 
@@ -556,6 +634,7 @@ Local building code rules reuse these check types with their own params. Add a n
 - **Ingest:** ADA 2010 Standards text → chunk by section number → embed → pgvector. Local code text is ingested the same way **only for sources marked storable in `docs/code_sources.md`**; every chunk carries `code`, `jurisdiction`, and `edition` metadata, and retrieval filters on them.
   - A code is a tree with cross-references, not a pile of paragraphs. Store each chunk's `parent_section`, its `kind` (`requirement`, `exception`, `advisory`, `definition`, `figure_caption`), and its outgoing references ("complying with 404.2.3"). Prepend the ancestor headings to the text before embedding, because a subsection like "Clear Width" means nothing without its parents.
   - Explanations may cite advisories only as guidance, labeled as such.
+- **Provider (decided November 23, 2026):** explanations go through OpenRouter to the model named in `configs/explain.yaml`, currently `deepseek/deepseek-v4.1-flash-1017`, only on an explicit user action. What is sent is limited to the finding's check, verdict, slot names and its rule file's quotes; element ids, labels, the address and numbers are withheld.
 - **Explain: a lookup, not a search.** The rule file already names the section. Fetch that section by id, plus its exceptions and the sections it references. This is deterministic, cannot retrieve the wrong section, and needs no embedding. Semantic search is for Q&A only, where the user's question does not come with a section number.
 - **Local rules without storable text:** the explanation is built from the rule's own paraphrase, params, and `source_url`. It cites the section number from the rule file and links out; it does not quote the code.
 - **The LLM does not write numbers.** It writes the explanation with named slots (`{measured}`, `{required}`, `{section}`), and code fills them from the check result, in the source's unit with the metric value alongside. The validator rejects any output containing digits outside a slot or a section number not in the fetched set. Numeric faithfulness then holds by construction, and the eval measures how often the raw output had to be rejected.
@@ -648,6 +727,8 @@ GET  /v1/plans/{id}/options         status per tab: building_code | vastu | feng
 POST /v1/plans/{id}/check           {option: "building_code", rulesets: ["ada_2010", "local/<slug>"]} → compliance run id
 GET  /v1/checks/{run_id}            results + explanations + coverage statement
 GET  /v1/checks/{run_id}/bcf        violations as a BCF file (§12.1)
+POST /v1/plans/{id}/life-safety     confirmed exits, room functions, declared loads → life safety analysis (§9.8)
+GET  /v1/plans/{id}/life-safety/{fmt}  the life safety sheet: svg | dxf
 GET  /v1/plans/{id}/review-queue    elements ranked by effect on verdicts
 GET  /v1/plans/{id}/export/{fmt}    dxf | ifc | gltf | pdf-report
 POST /v1/plans/{id}/ask             Q&A over plan + results
@@ -664,7 +745,7 @@ GET  /v1/plans/{id}/jurisdiction    the plan's confirmed authority chain and ado
 - `code_chunks` (code, jurisdiction, edition, section_id, parent_section, kind, references, text, embedding) — ADA text, plus local text only where `docs/code_sources.md` allows it
 - `explanations` (result_id, text, cited_sections, validator_passed, model_id, prompt_hash)
 
-A compliance report must be reproducible from (`model_version_id`, ordered `ruleset_versions`, `engine_version`). Rules and models are append-only: a correction or a code change adds a version and never edits one. Mention this traceability in the write-up — it's an Information Systems strength.
+A compliance report must be reproducible from (`model_version_id`, ordered `ruleset_versions`, `engine_version`). Rules and models are append-only: a correction or a code change adds a version and never edits one. A life safety analysis (§9.8) is stored with its inputs in the same way, so its sheet can be regenerated from a saved run. Mention this traceability in the write-up — it's an Information Systems strength.
 
 ### 12.1 Export details that professionals will check
 
@@ -702,6 +783,7 @@ The web application is the product (§1). Engine modules are reached only throug
 - **Plan editor:** original raster underneath, extracted vectors on top (SVG/canvas). Toggle layers. Drag wall endpoints, add/delete openings, edit labels, set scale by clicking two points and typing a length.
 - **Review queue:** the elements whose uncertainty can change a verdict, most influential first (§8.1 step 8). Confirming or correcting one re-runs compliance and re-ranks the queue. The queue being empty is the signal that the remaining results are stable.
 - **Project settings (Building code):** facility type, occupancy, sprinklered, type of work, permit application date. Shows the adoption record chain: adopted code, edition, effective date, source link, date retrieved, and verification status, before checks run. Save and restore these fields per project; a changed location, authority or input invalidates earlier Building code results and requires rechecking.
+- **Life safety (inside Building code):** confirm the proposed exits on the plan, confirm room functions and any declared loads, run, review the sheet beside its tables, and download SVG and DXF (§9.8). Selecting a table row highlights its path. Changing the drawing or these inputs marks the result out of date. Placing the view inside Building code is the recommendation, because Stage 2 uses the same jurisdiction and inputs; a fourth tab is the alternative, and the author decides (`IMPROVEMENT_PLAN.md`, decision 8).
 - **Jurisdiction choices come from the adoption-record catalogue**, so no country or region is hard-coded in the page. Allow manual authority entry when no catalogued option exists. A missing authority, permit date or verified adoption data leaves local coverage explicitly "not checked". For a location with no verified ruleset, offer only explicitly selected reference comparisons (such as ADA outside the U.S.), labelled separately from local requirements.
 - **Violations panel:** list grouped by code (ADA / local building code), then by rule; clicking highlights the element and shows measured ± uncertainty vs required (in the source's unit, with metric alongside), why the element was obligated, any exception that may apply, explanation, and citation link. Local rules that amend a base rule are tagged as amendments. Where two regimes test the same element, the governing requirement is marked. `borderline` and `unknown` are shown differently, each with the action that resolves it.
 - **Coverage panel:** what was checked, what was not applicable, what is not implemented, and what cannot be seen on a plan (§9.4). It appears on screen and on the first page of the PDF report.
@@ -740,7 +822,7 @@ Skeleton per §6, tooling, CI. **Done when:** `make lint test` passes in CI.
 - Rule registry, scoping and technical rules, the single verdict rule (§9.3), the v1 check types, the tests in §9.7, report generation with the coverage statement, and the BCF exporter (§12.1).
 - Author fills and verifies params for the initial ADA rules.
 - **Jurisdiction resolver** (§3.2): location → authority → adoption record chain → local rulesets, tested against saved provider responses. The engine must not depend on the chosen jurisdiction: a test adds a second synthetic authority in a different country using only an adoption record and a ruleset.
-- **Local building code:** for the first jurisdiction (any single authority, in any country; the author picks the one whose official sources they can verify most reliably), fill and verify `configs/jurisdictions/<slug>.yaml` and `docs/code_sources.md` from official sources, then fill and verify an initial set of local rules (aim for 5–8 that the v1 check types can express), each number with its quote. Claude Code builds the ruleset layering (§9.5) and scaffolds the rule files with null params.
+- **Local building code:** for the first jurisdiction (any single authority in India or the USA; the author picks the one whose official sources they can verify most reliably), fill and verify `configs/jurisdictions/<slug>.yaml` and `docs/code_sources.md` from official sources, then fill and verify an initial set of local rules (aim for 5–8 that the v1 check types can express), each number with its quote. Claude Code builds the ruleset layering (§9.5) and scaffolds the rule files with null params.
 - **Accuracy budget** (§11.1): run the sensitivity analysis and commit the budget table. M3–M5 are judged against it.
 - **Done when:** boundary, metamorphic, and layering tests pass; hand-checked plans match; results are correct on synthetic plans with seeded violations for both rulesets; `make budget` produces the table.
 - *(Doing compliance before extraction proves the rule engine is correct independently of CV errors.)*
@@ -752,6 +834,15 @@ Skeleton per §6, tooling, CI. **Done when:** `make lint test` passes in CI.
 - The author draws the CAD part of the own test set (§7.3) and the seeded-violation plans; the importer produces their ground truth. Include at least one sheet set whose site plan carries a location and one with no location.
 - **Done when:** the seeded set runs end to end from DXF and from vector PDF with every expected verdict reproduced. This is the first complete demo, and it exists before any model is trained.
 - *(This also removes a dependency in the original plan, where extraction metrics in M4 needed ground truth that was to be annotated in the M7 editor.)*
+
+### M2.6 — Life safety plan on exact inputs
+- Requirements are in §9.8. It needs the M2 review fixes (rule contracts, scale uncertainty, typed coverage), a CAD convention a person can draw (M2.5), and the plan drawing in `plancheck/export/svg.py`.
+- Model version 2 with migration; exits proposed and confirmed; room functions from `configs/space_functions.yaml`.
+- `plancheck/egress/`: walking distance, occupant load, the egress network, exit count, separation and capacity, returned as typed results and stored in the saved run.
+- The sheet as SVG and DXF and in the HTML report, and a runnable entry point from a drawn DXF to the sheet.
+- The author hand-measures the egress cases of the CAD test set (§7.3) into `eval/egress/expected.yaml`; the egress quantities join the accuracy budget.
+- **Done when:** for every egress case in the author-drawn set, the sheet is produced from the exact input path, every hand-measured value is reproduced within its tolerance, no verdict appears without a verified ruleset, and the known-answer and property tests pass.
+- **Stage 2** (checking against the adopted code) waits on author-verified values for one US authority and one Indian authority, and does not block M3. Stages 3 and 4 are later work.
 
 ### M3 — Segmentation model
 - CubiCasa5K prep, training, junction head, confidence calibration, metrics on its test split.
@@ -791,7 +882,7 @@ Skeleton per §6, tooling, CI. **Done when:** `make lint test` passes in CI.
 - Starts after M9. Optional, separately labelled guidance layers over the same building model, each run only from its own tab and needing no jurisdiction.
 - They are a separate **guidance** regime: never part of a governing requirement, never changing a regulatory verdict, and worded as alignment with a tradition, not compliance or violation.
 - Every ruleset names its system, school and author-chosen source; parameters are author-verified, never from general knowledge.
-- Detailed requirements and acceptance criteria are added to this specification before M10 begins (see `PRD.md` M10).
+- Detailed requirements and acceptance criteria are added to this specification before M10 begins (see `IMPROVEMENT_PLAN.md`, M10).
 
 ---
 
@@ -802,7 +893,9 @@ Skeleton per §6, tooling, CI. **Done when:** `make lint test` passes in CI.
 - Every geometry check and parser gets unit tests with known answers.
 - **Never invent code requirements.** Numeric rule params come only from the author, verified against the source.
 - **No jurisdiction is a default.** The jurisdiction is derived per project from the plan or the user's location and confirmed by the user. An unsupported location is reported as "not checked", never checked against another authority's rules. No country or region is hard-coded in the engine or the page.
+- **The scope for now is India and the USA.** Build location lookup, the country list, code families and test data for these two only, and keep the interfaces country-agnostic.
 - Keep traditional guidance (M10) separate from regulatory findings in data, verdicts, reports and the interface.
+- **A life safety sheet is a draft.** No verdict appears on it without an author-verified ruleset, and its "not shown" list is always printed (§9.8).
 - **Never invent adoption facts.** Which code and edition a jurisdiction adopted, effective dates, and amendment contents come only from an official source, verified and recorded in `configs/jurisdictions/<slug>.yaml`. A jurisdiction without a complete record gets no local rules.
 - **Never store or reproduce copyrighted code text** (e.g., IBC). ADA 2010 text is fine. Local code text is stored only for sources the author marked storable in `docs/code_sources.md`; otherwise paraphrase and link.
 - Don't scrape or bulk-download municipal or state code websites; the author supplies any local text.
@@ -834,7 +927,8 @@ Skeleton per §6, tooling, CI. **Done when:** `make lint test` passes in CI.
 | Licensing (CC BY-NC data, ICC copyright, local code publishers, AGPL/LGPL libraries) | Non-commercial note on data and weights; paraphrase-only IBC and local rules unless a source is logged as storable; dependency licenses logged |
 | ADA rules run on a building the ADA does not cover | `facility_type` gate; `not_applicable` with reason; compliance test set is commercial only (§3.0) |
 | "No violations found" is read as "compliant" | Coverage statement on every report; `fail_only` checks cannot emit `pass` (§9.4) |
-| An approximation errs in the unsafe direction (room-center travel distance, centerline room polygons) | Geodesic distance field; `clear_polygon` to wall faces; each check declares what it proves |
+| An approximation errs in the unsafe direction (room-center travel distance, centerline room polygons) | Exact shortest-path distance from the most remote point (§9.6); `clear_polygon` to wall faces; each check declares what it proves |
+| A draft life safety sheet is read as permit-ready | Disclaimer and a fixed "not shown" list on every sheet; no verdict without an author-verified ruleset; exits and room functions confirmed by the user (§9.8) |
 | Scale is wrong by a few percent and nobody notices | Dimension lines instead of wall matching; chain closure; per-axis solve; scale uncertainty carried into every verdict |
 | Pixel resolution is coarser than the difference between door sizes | Door catalog snapping; door schedule reading; minimum-DPI warning from the accuracy budget |
 | Ground truth is biased toward the model that helped annotate it | CAD-drawn plans with exact ground truth; a blind-annotated subset reported separately |
@@ -881,4 +975,4 @@ Knowing where this project sits makes the write-up and the interviews stronger. 
 
 ## Status
 
-The milestone checklist lives in `PRD.md`, so there is one copy.
+The milestone checklist lives in [`IMPROVEMENT_PLAN.md`](IMPROVEMENT_PLAN.md), so there is one copy.

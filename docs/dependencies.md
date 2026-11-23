@@ -20,6 +20,13 @@ The spec's rule (§16): ask the author before adding a copyleft dependency.
 | truststore | MIT | TLS certificates from the OS store for the Census geocoder client | |
 | ifcopenshell | LGPL-3.0-or-later | IFC export, validation, and reading | Copyleft. Used as an unmodified library. Approved by the author, 2026-11-05. |
 
+## External services
+
+| Service | Used for | What is sent | Notes |
+|---|---|---|---|
+| U.S. Census geocoder | Address to authority, U.S. only | The address the user enters | Only on an explicit user action. |
+| OpenRouter (model `deepseek/deepseek-v4.1-flash-1017`) | Plain-language explanations of findings | Each finding's check name, verdict, slot names and the quotes from its rule file. No element ids, room labels, address or numbers | Only on an explicit user action. Called with the standard library; no package added. Chosen by the author, 2026-11-23. Requires `OPENROUTER_API_KEY`. |
+
 ## Development only (never shipped)
 
 | Package | Licence | Used for | Notes |
@@ -29,6 +36,8 @@ The spec's rule (§16): ask the author before adding a copyleft dependency.
 | ruff | MIT | Lint and format | |
 | mypy | MIT | Type checking | |
 | types-PyYAML | Apache-2.0 | Type stubs | |
+| pytest-cov | MIT | Coverage gate in `make test` (90% line and branch) | Approved by the author, 2026-11-23. |
+| coverage | Apache-2.0 | Coverage measurement | Installed by pytest-cov. |
 
 ## PDF selection
 

@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"$CLAUDE_PROJECT_DIR/PRD.md\" 2>/dev/null || true"
+            "command": "cat \"$CLAUDE_PROJECT_DIR/docs/IMPROVEMENT_PLAN.md\" 2>/dev/null || true"
           }
         ]
       }

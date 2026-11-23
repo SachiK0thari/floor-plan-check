@@ -26,6 +26,7 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
     "types-PyYAML",
+    "pytest-cov>=5.0",
 ]
 
 [build-system]
@@ -38,6 +39,14 @@ packages = ["plancheck"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers"
+
+[tool.coverage.run]
+source = ["plancheck"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
 
 [tool.ruff]
 line-length = 100
