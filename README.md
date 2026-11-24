@@ -56,6 +56,6 @@ Every pass or fail comes from a deterministic geometry check on the building mod
 
 ## Licences and data
 
-- The segmentation model is trained on CubiCasa5K, which is licensed CC BY-NC 4.0. The trained weights are released for non-commercial use only.
+- The segmentation model is trained on [CubiCasa5K](https://zenodo.org/records/2613548) (Kalervo et al., 2019), licensed CC BY-NC-SA 4.0. The trained weights and anything else derived from the dataset are released under the same licence, for non-commercial use only. See [data sources](docs/data_sources.md).
 - The International Building Code is copyrighted. This repository stores section numbers, short paraphrases, and numeric requirements, and links to the publisher for the text.
 - Dependency licences are listed in [docs/dependencies.md](docs/dependencies.md).

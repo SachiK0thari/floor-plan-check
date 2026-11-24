@@ -319,7 +319,7 @@ plancheck/
 
 ### 7.1 CubiCasa5K (extraction training)
 - ~5,000 floor plan images with SVG annotations of walls, openings, rooms, and room types.
-- **License: CC BY-NC 4.0** (non-commercial). Note in README. The author downloads it; the path goes in `.env`. Whether model weights trained on NC data inherit the restriction is unsettled, so take the conservative position: release the weights as non-commercial too, and say so on any hosted demo.
+- **License: CC BY-NC-SA 4.0** (non-commercial, share-alike), per the Zenodo record that hosts the files; the GitHub repository's LICENSE says CC BY-NC 4.0, and the stricter one is followed (see `docs/data_sources.md`). Note in README. The author obtains it (a local path in `.env`, or the Kaggle copy attached in the author's account). Whether model weights trained on NC data inherit the restriction is unsettled, so take the conservative position: release the weights under CC BY-NC-SA 4.0 too, and say so on any hosted demo.
 - Mostly Finnish residential plans — room labels are often Finnish. Map labels in `configs/room_type_map.yaml`; report results separately for plans with English labels once the own test set exists.
 - Use the official train/val/test split. **Extraction only**: these are homes, so they are never used to evaluate ADA compliance (§3.0).
 - Drawing conventions differ from U.S. practice in ways that matter downstream: decimal commas (`3,8 m`), room areas printed in the room instead of dimension strings, and metric door modules.
