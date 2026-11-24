@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 
+from plancheck.compliance.contracts import CheckSpec
 from plancheck.compliance.results import Obligation
 from plancheck.compliance.rules import Rule
 from plancheck.model.types import EXTERIOR, BuildingModel
@@ -57,11 +58,32 @@ def entrance_doors(model: BuildingModel, rule: Rule) -> list[Obligation]:
                 f"at least {share:.0%} of entrances ({needed} of {len(exterior)}) must comply "
                 f"({rule.section}); every exterior door is counted as a public entrance"
             ),
+            # No exterior door is far more likely an incomplete model than a building
+            # without an entrance, so "0 of 0" must not pass.
+            unresolved_reason=None
+            if exterior
+            else (
+                "no exterior door or doorway is modelled; public entrances cannot be "
+                f"identified ({rule.section})"
+            ),
         )
     ]
 
 
-SCOPING_FUNCTIONS = {
-    "doors_serving_rooms": doors_serving_rooms,
-    "entrance_doors": entrance_doors,
+SCOPING: dict[str, CheckSpec] = {
+    "doors_serving_rooms": CheckSpec(
+        function=doors_serving_rooms,
+        element="opening",
+        proves=None,
+        connectivity="openings_and_rooms",
+    ),
+    "entrance_doors": CheckSpec(
+        function=entrance_doors,
+        element="opening",
+        proves=None,
+        requirement={"min_share": "percent"},
+        connectivity="openings",
+    ),
 }
+
+SCOPING_FUNCTIONS = {name: spec.function for name, spec in SCOPING.items()}

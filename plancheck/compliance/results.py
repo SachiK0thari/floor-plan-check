@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from plancheck.compliance.verdict import Verdict
+from plancheck.compliance.verdict import Verdict, margin_in_sigmas
 from plancheck.model.types import Measured, Point
 
 
@@ -31,6 +31,8 @@ class Obligation(_Base):
     element_ids: list[str]
     min_count: int
     reason: str
+    unresolved_reason: str | None = None
+    """Set when the group itself cannot be identified; the roll-up is then unknown."""
 
 
 class MeasurementSemantics(_Base):
@@ -40,6 +42,35 @@ class MeasurementSemantics(_Base):
     basis: str = Field(min_length=1)
     relation: Literal["min", "max"]
     unresolved_conditions: list[str] = Field(default_factory=list)
+
+
+class NamedMeasurement(_Base):
+    """One of the measurements a check makes, with its own requirement and verdict (C6).
+
+    Compound checks (door maneuvering, corridor runs) make several; the review queue needs
+    each one's margin, which a single ``measured`` value cannot carry.
+    """
+
+    name: str
+    measured: Measured
+    required: str  # as written in the source
+    required_mm: float
+    relation: Literal["min", "max"]
+    verdict: Verdict
+
+    @property
+    def margin_sigmas(self) -> float:
+        return margin_in_sigmas(self.measured, self.required_mm, self.relation)
+
+
+def tightest(measurements: list[NamedMeasurement]) -> NamedMeasurement | None:
+    """The measurement closest to failing: smallest margin in sigmas, then in millimetres."""
+
+    def key(m: NamedMeasurement) -> tuple[float, float]:
+        mm = m.measured.value_mm - m.required_mm
+        return (m.margin_sigmas, mm if m.relation == "min" else -mm)
+
+    return min(measurements, key=key) if measurements else None
 
 
 class RuleCitation(_Base):
@@ -65,6 +96,7 @@ class Finding(_Base):
     measured: Measured | None = None
     required: str | None = None  # as written in the source, e.g. "32 in"
     required_mm: float | None = None
+    measurements: list[NamedMeasurement] = Field(default_factory=list)
     reason: str | None = None  # why unknown, not applicable, or what was assumed
     obligations: list[str] = Field(default_factory=list)  # why the element was tested
     surfaced_exceptions: list[str] = Field(default_factory=list)
@@ -104,6 +136,7 @@ class CheckOutcome(_Base):
     measured: Measured | None = None
     required: str | None = None
     required_mm: float | None = None
+    measurements: list[NamedMeasurement] = Field(default_factory=list)
     reason: str | None = None
     surfaced_exceptions: list[str] = Field(default_factory=list)
     evidence: list[Evidence] = Field(default_factory=list)

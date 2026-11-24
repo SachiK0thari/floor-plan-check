@@ -216,3 +216,29 @@ def test_cross_corridor_path_cannot_hide_narrow_width(rule: Rule) -> None:
     assert (
         check(model_for(box(0, 0, 5000, 700), [[(2500, 0), (2500, 700)]]), rule) is Verdict.UNKNOWN
     )
+
+
+def test_named_measurements_cover_minimum_runs_and_separations(rule: Rule) -> None:
+    """C6: the minimum width, each narrow run and each separation are reported separately."""
+    p = rule.exceptions[0].params
+    model = pinches(rule, 300, p["separation_length"].mm + 100)
+    result = corridor_min_width(model, rule, model.rooms[0], CheckContext())
+    named = {m.name: m for m in result.measurements}
+    assert list(named) == [
+        "minimum clear width",
+        "narrow run 1 length",
+        "narrow run 2 length",
+        "separation 1 length",
+    ]
+    assert named["minimum clear width"].measured.value_mm == pytest.approx(p["reduced_width"].mm)
+    assert named["minimum clear width"].verdict is Verdict.FAIL  # below 36 in
+    assert named["narrow run 1 length"].measured.value_mm == pytest.approx(300)
+    assert (named["narrow run 1 length"].relation, named["narrow run 1 length"].verdict) == (
+        "max",
+        Verdict.PASS,
+    )
+    assert named["separation 1 length"].measured.value_mm == pytest.approx(
+        p["separation_length"].mm + 100
+    )
+    assert result.measured == named["minimum clear width"].measured
+    assert result.verdict is Verdict.PASS  # the short-reduction exception holds

@@ -26,8 +26,9 @@ from plancheck.compliance.applicability import (
     applicability,
     local_applicability,
 )
-from plancheck.compliance.checks import CHECK_FUNCTIONS
+from plancheck.compliance.checks import CHECKS
 from plancheck.compliance.context import CheckContext, connectivity_gaps
+from plancheck.compliance.contracts import effective_proves
 from plancheck.compliance.governing import cite, derive_governing
 from plancheck.compliance.registry import AmendmentRecord, LoadedRule, ResolvedRules
 from plancheck.compliance.results import (
@@ -37,7 +38,7 @@ from plancheck.compliance.results import (
     Obligation,
 )
 from plancheck.compliance.rules import Rule
-from plancheck.compliance.scoping.doors import SCOPING_FUNCTIONS
+from plancheck.compliance.scoping.doors import SCOPING
 from plancheck.compliance.verdict import Verdict, restrict, scoped_at_least
 from plancheck.jurisdiction.resolve import AdoptionRecord, load_adoption_records
 from plancheck.model.types import EXTERIOR, BuildingModel, Opening, Room
@@ -225,8 +226,8 @@ def run(
     scoping = [r for r in resolved.runnable if r.rule.kind == "scoping"]
     technical = [r for r in resolved.runnable if r.rule.kind == "technical"]
     for loaded in scoping:
-        function = SCOPING_FUNCTIONS.get(loaded.rule.check or "")
-        if function is None:
+        scope_spec = SCOPING.get(loaded.rule.check or "")
+        if scope_spec is None:
             not_implemented.append(loaded.rule.id)
             scope_status[loaded.rule.id] = Applies(
                 status=Verdict.UNKNOWN, reason="scoping check is not implemented"
@@ -235,9 +236,9 @@ def run(
             continue
         if gate(loaded):
             # An omitted connectivity record cannot establish that a door is exempt.
-            if loaded.rule.check in ("doors_serving_rooms", "entrance_doors"):
+            if scope_spec.connectivity != "none":
                 missing = connectivity_gaps(
-                    model, include_rooms=loaded.rule.check == "doors_serving_rooms"
+                    model, include_rooms=scope_spec.connectivity == "openings_and_rooms"
                 )
                 if missing:
                     status = Applies(
@@ -247,7 +248,7 @@ def run(
                     scope_status[loaded.rule.id] = status
                     skipped(loaded.rule, status)
                     continue
-            obligations.extend(function(model, loaded.rule))
+            obligations.extend(scope_spec.function(model, loaded.rule))
             checked[loaded.rule.id] = Counter()
             if surfaced(loaded.rule):
                 scoping_exceptions.append(
@@ -268,8 +269,8 @@ def run(
     # 3: technical rules.
     for loaded in technical:
         rule = loaded.rule
-        function = CHECK_FUNCTIONS.get(rule.check or "")
-        if function is None:
+        spec = CHECKS.get(rule.check or "")
+        if spec is None:
             not_implemented.append(rule.id)
             skipped(rule, Applies(status=Verdict.UNKNOWN, reason="check is not implemented"))
             continue
@@ -279,7 +280,8 @@ def run(
         candidates = [
             r
             for r in resolved.runnable
-            if r.rule.check == "opening_clear_width"
+            if spec.uses_check is not None
+            and r.rule.check == spec.uses_check
             and (r.ruleset == "ada_2010") == (loaded.ruleset == "ada_2010")
             and applies_to_project(r).status is Verdict.PASS
         ]
@@ -339,7 +341,7 @@ def run(
                     element,
                 )
                 continue
-            outcome = function(model, rule, element, check_ctx)
+            outcome = spec.function(model, rule, element, check_ctx)
             element_obligations = [
                 o for o in relevant if element is not None and element.id in o.element_ids
             ]
@@ -355,13 +357,12 @@ def run(
                     for exception in surfaced(rules_by_id[o.scoping_rule_id])
                 ]
                 semantics = semantics.model_copy(update={"unresolved_conditions": conditions})
-            verdict = restrict(outcome.verdict, rule.proves or "both")
+            # The check's own capability bounds the verdict even if a rule file claims more (A1).
+            proves = effective_proves(rule.proves, spec.proves)
+            verdict = restrict(outcome.verdict, proves)
             reason = outcome.reason
             if verdict is Verdict.UNKNOWN and outcome.verdict is not Verdict.UNKNOWN:
-                reason = (
-                    f"check can only prove {rule.proves.replace('_', ' ') if rule.proves else ''}; "
-                    + (reason or "")
-                )
+                reason = f"check can only prove {proves.replace('_', ' ')}; " + (reason or "")
             element_ids = [element.id] if element is not None else []
             finding = Finding(
                 rule_id=rule.id,
@@ -373,6 +374,7 @@ def run(
                 measured=outcome.measured,
                 required=outcome.required,
                 required_mm=outcome.required_mm,
+                measurements=outcome.measurements,
                 reason=reason,
                 obligations=[
                     o.reason
@@ -403,6 +405,11 @@ def run(
         for obligation in relevant:
             members = [by_element.get(eid, Verdict.UNKNOWN) for eid in obligation.element_ids]
             group_verdict = scoped_at_least(obligation.min_count, members)
+            group_reason = obligation.reason
+            if obligation.unresolved_reason is not None:
+                # The group itself could not be identified (A3), so its members prove nothing.
+                group_verdict = Verdict.UNKNOWN
+                group_reason = obligation.unresolved_reason
             group_findings.append(
                 Finding(
                     rule_id=rule.id,
@@ -411,7 +418,7 @@ def run(
                     title=rule.title,
                     verdict=group_verdict,
                     element_ids=list(obligation.element_ids),
-                    reason=obligation.reason,
+                    reason=group_reason,
                     surfaced_exceptions=sorted(
                         {
                             exception

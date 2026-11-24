@@ -6,6 +6,7 @@ this module combines verdicts.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable
 from enum import StrEnum
 from functools import cache
@@ -61,6 +62,20 @@ def decide_max(measured: Measured, limit_mm: float, k: float | None = None) -> V
     return Verdict.BORDERLINE
 
 
+def margin_in_sigmas(measured: Measured, limit_mm: float, relation: Literal["min", "max"]) -> float:
+    """How far the value clears its limit, in standard uncertainties; negative means short.
+
+    With no uncertainty the margin is infinite in the direction of the result, or zero at
+    the limit. ``decide_min`` and ``decide_max`` pass above ``k`` and fail below ``-k``.
+    """
+    margin = measured.value_mm - limit_mm if relation == "min" else limit_mm - measured.value_mm
+    if abs(margin) <= _EPS_MM:
+        return 0.0
+    if measured.sigma_mm == 0:
+        return math.copysign(math.inf, margin)
+    return margin / measured.sigma_mm
+
+
 def restrict(verdict: Verdict, proves: Literal["both", "fail_only", "pass_only"]) -> Verdict:
     """Limit a verdict to what the check can prove.
 
@@ -72,6 +87,18 @@ def restrict(verdict: Verdict, proves: Literal["both", "fail_only", "pass_only"]
     if proves == "pass_only" and verdict is Verdict.FAIL:
         return Verdict.UNKNOWN
     return verdict
+
+
+def same_or_borderline(*verdicts: Verdict) -> Verdict:
+    """The common verdict when every case agrees, otherwise borderline.
+
+    Used when an input decides which of several limits applies and that input is itself
+    uncertain: the result is definite only if every possible limit gives the same answer.
+    """
+    if not verdicts:
+        raise ValueError("same_or_borderline needs at least one verdict")
+    first = verdicts[0]
+    return first if all(v is first for v in verdicts) else Verdict.BORDERLINE
 
 
 def at_least(count: int, verdicts: Iterable[Verdict]) -> Verdict:

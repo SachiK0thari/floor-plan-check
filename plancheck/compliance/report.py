@@ -12,6 +12,7 @@ from xml.etree import ElementTree as ET
 from plancheck.compliance.artifacts import CheckRunArtifact
 from plancheck.compliance.results import Finding
 from plancheck.export.svg import plan_svg_element
+from plancheck.model.types import Measured
 
 if TYPE_CHECKING:
     from plancheck.rag.explain import ExplanationRun
@@ -189,11 +190,26 @@ def _number(value: float) -> str:
     return f"{value:.1f}".rstrip("0").rstrip(".")
 
 
+_RELATION = {"min": "\u2265", "max": "\u2264"}
+
+
 def measurement_text(finding: Finding) -> str:
-    """The measured value in millimetres with inches alongside, and its uncertainty."""
+    """The measured value in millimetres with inches alongside, and its uncertainty.
+
+    A check that makes several measurements (door maneuvering, a corridor with narrow
+    runs) lists each one with its own limit, so the failing one is visible.
+    """
+    if len(finding.measurements) > 1:
+        return "; ".join(
+            f"{m.name} {_value_text(m.measured)} ({_RELATION[m.relation]} {m.required})"
+            for m in finding.measurements
+        )
     if finding.measured is None:
         return "not measured"
-    measured = finding.measured
+    return _value_text(finding.measured)
+
+
+def _value_text(measured: Measured) -> str:
     return (
         f"{_number(measured.value_mm)} mm ({measured.value_mm / 25.4:.2f} in) "
         f"\u00b1 {_number(measured.sigma_mm)} mm"

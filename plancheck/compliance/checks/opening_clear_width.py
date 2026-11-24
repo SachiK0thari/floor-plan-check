@@ -5,7 +5,7 @@ from __future__ import annotations
 from plancheck.compliance.context import CheckContext
 from plancheck.compliance.results import CheckOutcome, Evidence, MeasurementSemantics
 from plancheck.compliance.rules import Rule
-from plancheck.compliance.verdict import Verdict, decide_min
+from plancheck.compliance.verdict import Verdict, decide_max, decide_min, same_or_borderline
 from plancheck.model.geometry import opening_span
 from plancheck.model.types import BuildingModel, Opening
 
@@ -60,17 +60,28 @@ def opening_clear_width(
 
     required = rule.requirement["min_clear_width"]
     notes = [how or ""]
-    deep = next((e for e in rule.exceptions if e.id == "deep-opening"), None)
-    if deep is not None and wall.thickness.value_mm > deep.params["depth"].mm:
-        required = deep.params["min_clear_width"]
-        notes.append(
-            f"opening deeper than {deep.params['depth'].as_written()}: larger minimum applies"
-        )
+    verdict = decide_min(measured, required.mm, ctx.k)
+    if deep is not None:
+        # Whether the opening is "deep" is itself a measurement, so it goes through the
+        # verdict rule too: PASS means surely not deeper than the stated depth.
+        depth = deep.params["depth"]
+        larger = deep.params["min_clear_width"]
+        membership = decide_max(wall.thickness, depth.mm, ctx.k)
+        if membership is Verdict.FAIL:
+            verdict, required = decide_min(measured, larger.mm, ctx.k), larger
+            notes.append(f"opening deeper than {depth.as_written()}: larger minimum applies")
+        elif membership is not Verdict.PASS:
+            verdict = same_or_borderline(verdict, decide_min(measured, larger.mm, ctx.k))
+            notes.append(
+                f"wall thickness is within its uncertainty of {depth.as_written()}, so either "
+                f"{required.as_written()} or {larger.as_written()} applies"
+            )
+            required = larger
     if opening.operation == "double_swing":
         notes.append("double-leaf door: one active leaf is judged")
 
     return CheckOutcome(
-        verdict=decide_min(measured, required.mm, ctx.k),
+        verdict=verdict,
         measured=measured,
         required=required.as_written(),
         required_mm=required.mm,

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import math
+from typing import Any
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
@@ -12,7 +15,9 @@ from plancheck.compliance.verdict import (
     decide_max,
     decide_min,
     guard_factor,
+    margin_in_sigmas,
     restrict,
+    same_or_borderline,
 )
 from plancheck.model.types import Measured
 
@@ -143,6 +148,25 @@ def test_any_of(members: list[Verdict], expected: Verdict) -> None:
 
 
 @pytest.mark.parametrize(
+    ("members", "expected"),
+    [
+        ([P, P], P),
+        ([F, F], F),
+        ([P, F], B),  # the uncertain input decides between them
+        ([P], P),
+        ([B, B], B),
+    ],
+)
+def test_same_or_borderline(members: list[Verdict], expected: Verdict) -> None:
+    assert same_or_borderline(*members) is expected
+
+
+def test_same_or_borderline_needs_a_verdict() -> None:
+    with pytest.raises(ValueError, match="at least one"):
+        same_or_borderline()
+
+
+@pytest.mark.parametrize(
     ("count", "members", "expected"),
     [
         (2, [P, P, F], P),
@@ -171,3 +195,26 @@ def test_scoped_group_cardinality(count: int, members: list[Verdict], expected: 
     from plancheck.compliance.verdict import scoped_at_least
 
     assert scoped_at_least(count, members) is expected
+
+
+@pytest.mark.parametrize(
+    ("value", "sigma", "limit", "relation", "expected"),
+    [
+        (830.0, 5.0, 812.8, "min", 3.44),
+        (800.0, 5.0, 812.8, "min", -2.56),
+        (600.0, 20.0, 609.6, "max", 0.48),
+        (812.8, 5.0, 812.8, "min", 0.0),
+        (900.0, 0.0, 812.8, "min", math.inf),
+        (700.0, 0.0, 812.8, "min", -math.inf),
+        (812.8, 0.0, 812.8, "min", 0.0),
+    ],
+)
+def test_margin_in_sigmas(
+    value: float, sigma: float, limit: float, relation: Any, expected: float
+) -> None:
+    m = Measured(value_mm=value, sigma_mm=sigma, source="user")
+    assert margin_in_sigmas(m, limit, relation) == pytest.approx(expected)
+    # Consistent with the decision rule at k = 2.
+    verdict = (decide_min if relation == "min" else decide_max)(m, limit, 2.0)
+    margin = margin_in_sigmas(m, limit, relation)
+    assert (verdict is P) == (margin >= 2 or (margin == 0.0 and sigma == 0))

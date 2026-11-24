@@ -94,6 +94,36 @@ def test_entrance_share_rounds_up(two_rooms: BuildingModel) -> None:
     assert (group.element_ids, group.min_count) == (["D2", "D3", "D4"], 2)
 
 
+def without_entrances(model: BuildingModel) -> BuildingModel:
+    """The two-room plan with its exterior door re-linked between the rooms: no entrance."""
+    edges = [
+        GraphEdge(opening_id=e.opening_id, a="R1", b="R2") if EXTERIOR in (e.a, e.b) else e
+        for e in model.graph.edges
+    ]
+    return model.model_copy(update={"graph": model.graph.model_copy(update={"edges": edges})})
+
+
+def test_no_exterior_door_leaves_the_entrance_group_unresolved(
+    two_rooms: BuildingModel, ada: ResolvedRules
+) -> None:
+    rule = ada.get("ada2010.scoping.entrances").rule
+    (group,) = entrance_doors(without_entrances(two_rooms), rule)
+    assert (group.element_ids, group.min_count) == ([], 0)
+    assert group.unresolved_reason is not None
+    (with_door,) = entrance_doors(two_rooms, rule)
+    assert with_door.unresolved_reason is None
+
+    # "At least 0 of 0" used to pass (A3); with no entrance modelled it is unknown.
+    report = run(commercial(without_entrances(two_rooms)), ada, ctx(deduction_mm=50))
+    groups = {(g.rule_id, g.group): g for g in report.group_findings}
+    for rule_id in ("ada2010.door-clear-width", "ada2010.door-maneuvering-clearance"):
+        finding = groups[(rule_id, "entrances")]
+        assert finding.verdict is Verdict.UNKNOWN
+        assert (finding.reason or "").startswith("no exterior door or doorway is modelled")
+    # Door-level findings and the room groups are unaffected.
+    assert groups[("ada2010.door-clear-width", "room:R1")].verdict is Verdict.PASS
+
+
 def three_entrances(model: BuildingModel) -> BuildingModel:
     """The two-room plan with two more exterior doors: one into R1, one into R2."""
     d2 = model.opening("D2")

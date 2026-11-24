@@ -111,6 +111,45 @@ def test_deep_opening_needs_the_larger_width(
     assert "larger minimum applies" in (result.reason or "")
 
 
+def with_wall_thickness(model: BuildingModel, value_mm: float, sigma_mm: float) -> BuildingModel:
+    thickness = Measured(value_mm=value_mm, sigma_mm=sigma_mm, source="user")
+    walls = [
+        w.model_copy(update={"thickness": thickness}) if w.id == "W5" else w for w in model.walls
+    ]
+    return model.model_copy(update={"walls": walls})
+
+
+@pytest.mark.parametrize(
+    ("thickness", "sigma", "clear", "verdict", "required"),
+    [
+        # 850 mm clear sits between the two limits (32 in = 812.8 mm, 36 in = 914.4 mm).
+        (600.0, 0.0, 850.0, Verdict.PASS, "32 in"),
+        (600.0, 20.0, 850.0, Verdict.BORDERLINE, "36 in"),  # may be deeper than 609.6 mm (A2)
+        (620.0, 20.0, 850.0, Verdict.BORDERLINE, "36 in"),  # may be shallower than 609.6 mm
+        (680.0, 20.0, 850.0, Verdict.FAIL, "36 in"),  # surely deep
+        (620.0, 0.0, 850.0, Verdict.FAIL, "36 in"),
+        # Both limits agree, so the uncertain depth does not matter.
+        (600.0, 20.0, 950.0, Verdict.PASS, "36 in"),
+        (600.0, 20.0, 700.0, Verdict.FAIL, "36 in"),
+    ],
+)
+def test_deep_opening_membership_goes_through_the_verdict_rule(
+    two_rooms: BuildingModel,
+    rules: dict[str, Rule],
+    thickness: float,
+    sigma: float,
+    clear: float,
+    verdict: Verdict,
+    required: str,
+) -> None:
+    rule = rules["ada2010.door-clear-width"]
+    model = with_clear_width(with_wall_thickness(two_rooms, thickness, sigma), D1=clear)
+    result = opening_clear_width(model, rule, model.opening("D1"), ctx(deduction_mm=None))
+    assert (result.verdict, result.required) == (verdict, required)
+    if sigma and thickness < 680:
+        assert "either 32 in or 36 in applies" in (result.reason or "")
+
+
 def test_surfaced_exceptions_are_listed(two_rooms: BuildingModel, rules: dict[str, Rule]) -> None:
     rule = rules["ada2010.door-clear-width"]
     result = opening_clear_width(two_rooms, rule, two_rooms.opening("D1"), ctx())
@@ -374,3 +413,36 @@ def test_route_without_a_door_rule_is_unknown(
     rule = rules["ada2010.accessible-route"]
     result = accessible_route_exists(two_rooms, rule, two_rooms.room("R1"), ctx())
     assert result.verdict is Verdict.UNKNOWN
+
+
+# ---------------------------------------------------------------- named measurements (C6)
+
+
+def test_maneuvering_returns_its_four_measurements(
+    two_rooms: BuildingModel, rules: dict[str, Rule]
+) -> None:
+    rule = rules["ada2010.door-maneuvering-clearance"]
+    model = two_rooms.model_copy(update={"fixtures": [fixture_in("R1", 3000, 1400, 3900, 3000)]})
+    result = door_maneuvering_clearance(model, rule, model.opening("D1"), ctx())
+    named = {m.name: m for m in result.measurements}
+    assert list(named) == [
+        "pull-side depth",
+        "pull-side clearance beyond the latch",
+        "push-side depth",
+    ]  # push beyond latch is 0 in, so nothing is measured
+    pull = named["pull-side depth"]
+    assert (pull.verdict, pull.required, pull.relation) == (Verdict.FAIL, "60 in", "min")
+    assert pull.measured.value_mm == pytest.approx(51)
+    assert named["push-side depth"].verdict is Verdict.PASS
+    # The single ``measured`` value is the tightest one, for existing consumers.
+    assert result.measured == pull.measured
+
+
+def test_turning_space_reports_the_circle(rules: dict[str, Rule]) -> None:
+    rule = rules["ada2010.toilet-room-turning-space"]
+    model = room_model(box(1600, 1600))
+    result = turning_space(model, rule, model.rooms[0], ctx())
+    (circle,) = result.measurements
+    assert circle.name == "largest turning circle"
+    assert circle.required == "60 in"
+    assert circle.measured == result.measured

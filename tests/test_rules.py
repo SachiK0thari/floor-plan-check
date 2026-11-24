@@ -155,7 +155,7 @@ def rule_data(**overrides: Any) -> dict[str, Any]:
         "paraphrase": "Corridors have a minimum width.",
         "check": "corridor_min_width",
         "selection": {"element": "room", "filter": {"room_type": ["corridor"]}},
-        "requirement": {"min_width": {"value": 1000, "unit": "mm"}},
+        "requirement": {"min_clear_width": {"value": 1000, "unit": "mm"}},
         "proves": "both",
     }
     return data | overrides
@@ -174,7 +174,7 @@ def test_param_refuses_to_convert_a_missing_value() -> None:
             {
                 "status": "verified",
                 "verified_by": "x",
-                "requirement": {"min_width": {"value": None, "unit": "mm"}},
+                "requirement": {"min_clear_width": {"value": None, "unit": "mm"}},
             },
             "cannot have null params",
         ),
@@ -210,7 +210,7 @@ def local(
     if mode == "delete":
         data.update(check=None, requirement={}, proves=None)
     else:
-        data["requirement"] = {"min_width": {"value": width, "unit": "mm"}}
+        data["requirement"] = {"min_clear_width": {"value": width, "unit": "mm"}}
     return data
 
 
@@ -228,7 +228,7 @@ def test_replace_drops_the_base_rule_and_is_reported(rules_dir: Path) -> None:
     write_rules(rules_dir, "local/st", local("st", "st.corridor", "testcode.corridor-min-width"))
     resolved = resolve(["ibc_style", "local/st"], rules_dir)
     assert [r.rule.id for r in resolved.rules] == ["testcode.room-min-area", "st.corridor"]
-    assert resolved.get("st.corridor").rule.requirement["min_width"].value == 1200
+    assert resolved.get("st.corridor").rule.requirement["min_clear_width"].value == 1200
     assert resolved.notes == ["st.corridor replaces testcode.corridor-min-width (Test Code)"]
 
 
@@ -249,7 +249,7 @@ def test_chain_of_two_amendments_resolves_in_order(rules_dir: Path) -> None:
     write_rules(rules_dir, "local/city", local("city", "city.corridor", "st.corridor", width=1500))
     resolved = resolve(["ibc_style", "local/st", "local/city"], rules_dir)
     assert [r.rule.id for r in resolved.rules] == ["testcode.room-min-area", "city.corridor"]
-    assert resolved.get("city.corridor").rule.requirement["min_width"].value == 1500
+    assert resolved.get("city.corridor").rule.requirement["min_clear_width"].value == 1500
     assert len(resolved.notes) == 2
 
 
@@ -304,10 +304,14 @@ def test_local_rule_must_carry_its_ruleset_slug(rules_dir: Path) -> None:
 
 
 def test_rules_with_unfilled_values_do_not_run(rules_dir: Path) -> None:
-    draft = rule_data(id="testcode.draft", requirement={"min_width": {"value": None, "unit": "mm"}})
+    draft = rule_data(
+        id="testcode.draft", requirement={"min_clear_width": {"value": None, "unit": "mm"}}
+    )
     write_rules(rules_dir, "ibc_style", draft)
     resolved = resolve(["ibc_style"], rules_dir)
-    assert resolved.not_runnable == [("testcode.draft", "values not filled in: ['min_width']")]
+    assert resolved.not_runnable == [
+        ("testcode.draft", "values not filled in: ['min_clear_width']")
+    ]
     assert "testcode.draft" not in [r.rule.id for r in resolved.runnable]
     assert "testcode.draft" in [r.rule.id for r in resolved.rules]  # still listed
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import re
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
@@ -19,8 +19,12 @@ import yaml
 from pydantic import BaseModel, ConfigDict
 
 from plancheck.compliance.applicability import Applies, applicability
+from plancheck.compliance.checks import CHECKS
+from plancheck.compliance.contracts import CheckSpec, contract_problems
 from plancheck.compliance.rules import Param, Rule
+from plancheck.compliance.scoping.doors import SCOPING
 from plancheck.compliance.verdict import Verdict
+from plancheck.config import load_config
 from plancheck.model.types import ProjectContext
 
 RULES_DIR = Path(__file__).resolve().parent.parent.parent / "rules"
@@ -79,6 +83,32 @@ def _amendment(
     )
 
 
+def specs_for(rule: Rule) -> Mapping[str, CheckSpec]:
+    """The functions a rule of this kind may name: technical checks or scoping functions."""
+    return CHECKS if rule.kind == "technical" else SCOPING
+
+
+def spec_for(rule: Rule) -> CheckSpec | None:
+    return specs_for(rule).get(rule.check or "")
+
+
+def rule_contract_problems(rule: Rule) -> list[str]:
+    """Ways the rule breaks the contract of the function it names (A1, A6)."""
+    return contract_problems(rule, specs_for(rule))
+
+
+def contract_warnings(rule: Rule) -> list[str]:
+    """Suspicious but legal: a room_type filter value that no room label maps to."""
+    if rule.selection is None or "room_type" not in rule.selection.filter:
+        return []
+    known = {str(v) for v in load_config("room_type_map").values()}
+    wanted = rule.selection.filter["room_type"]
+    unknown = sorted(
+        str(v) for v in (wanted if isinstance(wanted, list) else [wanted]) if str(v) not in known
+    )
+    return [f"room_type {unknown} is not a value in configs/room_type_map.yaml"] if unknown else []
+
+
 def load_ruleset(name: str, rules_dir: Path | None = None) -> list[LoadedRule]:
     """Load ``rules/<name>/*.yaml``. A local ruleset is named ``local/<slug>``."""
     folder = (rules_dir or RULES_DIR) / name
@@ -96,6 +126,9 @@ def load_ruleset(name: str, rules_dir: Path | None = None) -> list[LoadedRule]:
             raise RuleError(
                 f"{path}: jurisdiction is {rule.jurisdiction!r} but the ruleset is '{name}'"
             )
+        problems = rule_contract_problems(rule)
+        if problems:
+            raise RuleError(f"{path}: rule {rule.id}: " + "; ".join(problems))
         loaded.append(LoadedRule(rule, name, path, hashlib.sha256(raw).hexdigest()))
     return loaded
 
@@ -307,6 +340,15 @@ def resolve(rulesets: Sequence[str], rules_dir: Path | None = None) -> ResolvedR
         for loaded in additions:
             effective[loaded.rule.id] = loaded
     resolved.rules = list(effective.values())
+    scoping_ids = {r.rule.id for r in resolved.rules if r.rule.kind == "scoping"}
+    for loaded in resolved.rules:
+        selection = loaded.rule.selection
+        absent = [s for s in (selection.obligated_by if selection else []) if s not in scoping_ids]
+        if absent:
+            raise RuleError(
+                f"{loaded.rule.id} is obligated by {absent}, which are not scoping rules "
+                f"in {list(rulesets)}"
+            )
     for loaded in resolved.rules:
         missing = loaded.rule.null_params()
         if missing:
@@ -345,6 +387,8 @@ def main() -> int:
             print(f"  {rule.status:<8} {rule.id}  ({rule.section})")
             for missing in rule.null_params():
                 print(f"           not filled in: {missing}")
+            for warning in contract_warnings(rule):
+                print(f"           warning: {warning}")
             for problem in quote_problems(loaded):
                 print(f"           QUOTE MISMATCH  {problem}")
                 failed = True

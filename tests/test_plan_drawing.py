@@ -8,18 +8,22 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import pytest
+from shapely.geometry import Point as ShapelyPoint
+from shapely.geometry import Polygon
 
 from plancheck import web
 from plancheck.compliance.artifacts import CheckRunArtifact, create_run
 from plancheck.compliance.engine import Report, run
 from plancheck.compliance.registry import resolve
 from plancheck.compliance.report import export_report, measurement_text, requirement_text
+from plancheck.compliance.results import Finding
 from plancheck.compliance.verdict import Verdict
 from plancheck.evaluation.plans import corridor_plan, sample_office_plan, transform_model
 from plancheck.evaluation.validate import signatures
 from plancheck.export.dxf import export_dxf
 from plancheck.export.svg import finding_shapes, plan_svg
 from plancheck.ingest.vector_pdf import export_vector_pdf
+from plancheck.model.geometry import opening_span
 from plancheck.model.types import BuildingModel
 from plancheck.pipeline import process
 
@@ -77,19 +81,44 @@ def test_svg_has_one_group_for_every_finding_that_can_be_drawn(
         assert links == ([f"#pc-row-{number}"] if problem else [])
 
 
+def route_finding(report: Report, room_id: str) -> tuple[int, Finding]:
+    return next(
+        (n, f)
+        for n, f in enumerate(report.findings, start=1)
+        if f.rule_id == "ada2010.accessible-route" and f.element_ids == [room_id]
+    )
+
+
+def test_route_is_drawn_through_its_doors_and_rooms(office: tuple[BuildingModel, Report]) -> None:
+    """C6: the route's evidence is a polyline, a door midpoint then a point in each room."""
+    model, report = office
+    number, route = route_finding(report, "R07")
+    (line,) = finding_shapes(model, route)
+    assert line.kind == "line"
+    doors = (line.label or "").split(" → ")
+    assert len(line.points) == 2 * len(doors) >= 2
+    assert Polygon(model.room("R07").clear_polygon).contains(ShapelyPoint(line.points[-1]))
+    for i, door_id in enumerate(doors):
+        opening = model.opening(door_id)
+        a, b = opening_span(model.wall(opening.wall_id), opening)
+        assert line.points[2 * i] == pytest.approx(((a[0] + b[0]) / 2, (a[1] + b[1]) / 2))
+    group = finding_groups(plan_svg(model, report))[number]
+    assert "pc-fallback" not in group.attrib["class"]
+    assert list(group.iter(f"{SVG}polyline"))
+
+
 def test_finding_without_evidence_is_drawn_as_its_element(
     office: tuple[BuildingModel, Report],
 ) -> None:
     model, report = office
-    number, route = next(
-        (n, f)
-        for n, f in enumerate(report.findings, start=1)
-        if f.rule_id == "ada2010.accessible-route" and f.element_ids == ["R07"]
-    )
-    shapes = finding_shapes(model, route)
+    number, route = route_finding(report, "R07")
+    bare = route.model_copy(update={"evidence": []})
+    shapes = finding_shapes(model, bare)
     assert [shape.kind for shape in shapes] == ["polygon"]
     assert shapes[0].points == model.room("R07").clear_polygon
-    assert "pc-fallback" in finding_groups(plan_svg(model, report))[number].attrib["class"]
+    findings = [bare if n == number else f for n, f in enumerate(report.findings, start=1)]
+    drawn = plan_svg(model, report.model_copy(update={"findings": findings}))
+    assert "pc-fallback" in finding_groups(drawn)[number].attrib["class"]
 
 
 def test_plan_without_a_report_draws_no_findings() -> None:
@@ -142,10 +171,21 @@ def test_html_report_draws_the_plan_and_lists_problems_first(tmp_path: Path) -> 
     # A verdict is marked with a symbol and a word, not with colour alone.
     assert "✕ Fail" in text
     assert "! Borderline" in text
-    door = next(f for f in report.findings if f.element_ids == ["D04"] and f.measured)
+    door = next(
+        f for f in report.findings if f.element_ids == ["D04"] and f.rule_id.endswith("clear-width")
+    )
     assert measurement_text(door) == "710 mm (27.95 in) ± 0 mm"
     assert requirement_text(door) == "32 in (812.8 mm)"
     assert measurement_text(door) in text
+    # A compound check lists each of its measurements with its own limit (C6).
+    clearance = next(
+        f for f in report.findings if f.rule_id.endswith("maneuvering-clearance") and f.measurements
+    )
+    listed = measurement_text(clearance)
+    assert listed.startswith("pull-side depth ")
+    assert "(≥ 60 in)" in listed
+    assert "push-side depth " in listed
+    assert listed in text
 
 
 def test_pipeline_writes_the_drawing_and_both_paths_draw_the_same_findings(

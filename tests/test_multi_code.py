@@ -298,7 +298,9 @@ def test_incompatible_measurement_semantics_are_not_compared(
     monkeypatch: pytest.MonkeyPatch,
     problem: str,
 ) -> None:
-    from plancheck.compliance.checks import CHECK_FUNCTIONS
+    import dataclasses
+
+    from plancheck.compliance.checks import CHECKS
     from plancheck.compliance.rules import Rule
     from plancheck.model.types import Opening
 
@@ -321,7 +323,9 @@ def test_incompatible_measurement_semantics_are_not_compared(
             ),
         )
 
-    monkeypatch.setitem(CHECK_FUNCTIONS, "synthetic_width", synthetic_check)
+    # Same contract as the real width check, so the rule file is valid; only the function differs.
+    spec = dataclasses.replace(CHECKS["opening_clear_width"], function=synthetic_check)
+    monkeypatch.setitem(CHECKS, "synthetic_width", spec)
     report = run(
         model, resolved_width(rules_dir, check="synthetic_width"), adoption_records=records
     )

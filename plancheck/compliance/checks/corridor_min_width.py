@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 from itertools import pairwise
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 from shapely.affinity import rotate
@@ -16,8 +17,8 @@ from shapely.ops import unary_union
 
 from plancheck.compliance.checks.turning_space import free_area
 from plancheck.compliance.context import CheckContext, geometry_sigma
-from plancheck.compliance.results import CheckOutcome, Evidence
-from plancheck.compliance.rules import Rule
+from plancheck.compliance.results import CheckOutcome, Evidence, NamedMeasurement
+from plancheck.compliance.rules import Param, Rule
 from plancheck.compliance.verdict import Verdict, all_of, decide_max, decide_min
 from plancheck.model.types import BuildingModel, Measured, Point, Room
 
@@ -193,6 +194,33 @@ def corridor_min_width(
     )
     verdicts = []
     notes = []
+    smallest = measured(minimum.width_mm)
+    measurements = [
+        NamedMeasurement(
+            name="minimum clear width",
+            measured=smallest,
+            required=required.as_written(),
+            required_mm=required.mm,
+            relation="min",
+            verdict=decide_min(smallest, required.mm, ctx.k),
+        )
+    ]
+
+    def record(name: str, value: float, param: Param, relation: Literal["min", "max"]) -> Verdict:
+        decide = decide_min if relation == "min" else decide_max
+        verdict = decide(measured(value), param.mm, ctx.k)
+        measurements.append(
+            NamedMeasurement(
+                name=name,
+                measured=measured(value),
+                required=param.as_written(),
+                required_mm=param.mm,
+                relation=relation,
+                verdict=verdict,
+            )
+        )
+        return verdict
+
     for profile in profiles:
         runs: list[list[WidthInterval]] = []
         uncertain_membership = False
@@ -225,14 +253,18 @@ def corridor_min_width(
             notes.append("short-reduction distances across branches/bends require review")
             continue
         conditions = [widths]
-        for run in runs:
+        for number, run in enumerate(runs, 1):
             length = run[-1].end_mm - run[0].start_mm
             notes.append(f"narrow run {length:g} mm")
-            conditions.append(decide_max(measured(length), params["max_length"].mm, ctx.k))
-        for first, second in pairwise(runs):
+            conditions.append(
+                record(f"narrow run {number} length", length, params["max_length"], "max")
+            )
+        for number, (first, second) in enumerate(pairwise(runs), 1):
             gap = second[0].start_mm - first[-1].end_mm
             notes.append(f"separation {gap:g} mm")
-            conditions.append(decide_min(measured(gap), params["separation_length"].mm, ctx.k))
+            conditions.append(
+                record(f"separation {number} length", gap, params["separation_length"], "min")
+            )
             conditions.extend(
                 decide_min(measured(i.width_mm), params["separation_width"].mm, ctx.k)
                 for i in profile
@@ -245,7 +277,8 @@ def corridor_min_width(
         )
     return CheckOutcome(
         verdict=all_of(verdicts),
-        measured=measured(minimum.width_mm),
+        measured=smallest,
+        measurements=measurements,
         required=required.as_written(),
         required_mm=required.mm,
         reason="event-exact transverse width profile; " + "; ".join(notes),

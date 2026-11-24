@@ -13,15 +13,15 @@ furniture and casework are not on the plan.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from shapely.geometry import LineString, Polygon
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
 from plancheck.compliance.context import CheckContext, geometry_sigma
-from plancheck.compliance.results import CheckOutcome, Evidence
-from plancheck.compliance.rules import Rule
+from plancheck.compliance.results import CheckOutcome, Evidence, NamedMeasurement, tightest
+from plancheck.compliance.rules import Param, Rule
 from plancheck.compliance.verdict import Verdict, all_of, decide_min
 from plancheck.model.geometry import door_swing, opening_span, wall_footprint
 from plancheck.model.types import BuildingModel, Measured, Opening, Point
@@ -62,6 +62,7 @@ class _Side:
     verdicts: list[Verdict]
     evidence: list[Evidence]
     short: list[str]
+    measurements: list[NamedMeasurement] = field(default_factory=list)
 
 
 def _measure_side(
@@ -70,13 +71,14 @@ def _measure_side(
     along: Point,
     out: Point,
     width: float,
-    depth_mm: float,
-    latch_mm: float,
+    depth_req: Param,
+    latch_req: Param,
     obstacles: BaseGeometry,
     sigma: float,
     k: float,
 ) -> _Side:
     """Free depth in front of the doorway, and free length beyond the latch, on one side."""
+    depth_mm, latch_mm = depth_req.mm, latch_req.mm
     face = LineString([origin, _shift(origin, along, width)])
     cover = width + latch_mm
     probe = _rect(origin, along, out, cover, _PROBE_MM)
@@ -84,6 +86,16 @@ def _measure_side(
         value_mm=_free_extent(probe, face, obstacles), sigma_mm=sigma, source="geometry"
     )
     side = _Side(name, [decide_min(depth, depth_mm, k)], [], [])
+    side.measurements.append(
+        NamedMeasurement(
+            name=f"{name}-side depth",
+            measured=depth,
+            required=depth_req.as_written(),
+            required_mm=depth_mm,
+            relation="min",
+            verdict=side.verdicts[0],
+        )
+    )
     shown = _rect(origin, along, out, cover, depth_mm)
     side.evidence.append(
         Evidence(kind="polygon", points=list(shown.exterior.coords)[:-1], label=f"{name} side")
@@ -98,6 +110,16 @@ def _measure_side(
             value_mm=_free_extent(strip, latch_line, obstacles), sigma_mm=sigma, source="geometry"
         )
         side.verdicts.append(decide_min(beyond, latch_mm, k))
+        side.measurements.append(
+            NamedMeasurement(
+                name=f"{name}-side clearance beyond the latch",
+                measured=beyond,
+                required=latch_req.as_written(),
+                required_mm=latch_mm,
+                relation="min",
+                verdict=side.verdicts[1],
+            )
+        )
         if side.verdicts[1] is Verdict.FAIL:
             side.short.append(f"{name}-side latch clearance {beyond.value_mm:.0f} mm")
     return side
@@ -135,8 +157,8 @@ def door_maneuvering_clearance(
             swing.along,
             pull_out,
             width,
-            req["pull_perpendicular"].mm,
-            req["pull_beyond_latch"].mm,
+            req["pull_perpendicular"],
+            req["pull_beyond_latch"],
             obstacles,
             sigma,
             ctx.k,
@@ -147,8 +169,8 @@ def door_maneuvering_clearance(
             swing.along,
             push_out,
             width,
-            req["push_perpendicular"].mm,
-            req["push_beyond_latch"].mm,
+            req["push_perpendicular"],
+            req["push_beyond_latch"],
             obstacles,
             sigma,
             ctx.k,
@@ -163,8 +185,12 @@ def door_maneuvering_clearance(
         f"{req['pull_beyond_latch'].as_written()} beyond latch; "
         f"push {req['push_perpendicular'].as_written()} deep"
     )
+    measurements = [m for side in sides for m in side.measurements]
+    closest = tightest(measurements)
     return CheckOutcome(
         verdict=all_of(v for side in sides for v in side.verdicts),
+        measured=closest.measured if closest else None,
+        measurements=measurements,
         required=required,
         reason=reason,
         surfaced_exceptions=surfaced,

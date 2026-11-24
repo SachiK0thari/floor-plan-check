@@ -21,7 +21,7 @@ from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
 from plancheck.compliance.context import CheckContext, geometry_sigma
-from plancheck.compliance.results import CheckOutcome, Evidence
+from plancheck.compliance.results import CheckOutcome, Evidence, NamedMeasurement
 from plancheck.compliance.rules import Rule
 from plancheck.compliance.verdict import Verdict, any_of, decide_min
 from plancheck.model.types import BuildingModel, Measured, Room
@@ -150,6 +150,16 @@ def turning_space(model: BuildingModel, rule: Rule, room: Room, ctx: CheckContex
     return CheckOutcome(
         verdict=verdict,
         measured=measured,
+        measurements=[
+            NamedMeasurement(
+                name="largest turning circle",
+                measured=measured,
+                required=req["circle_diameter"].as_written(),
+                required_mm=req["circle_diameter"].mm,
+                relation="min",
+                verdict=circle_verdict,
+            )
+        ],
         required=(
             f"circle {req['circle_diameter'].as_written()} or "
             f"T in {req['t_square'].as_written()} square"
