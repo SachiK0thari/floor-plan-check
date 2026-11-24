@@ -39,6 +39,19 @@ The spec's rule (§16): ask the author before adding a copyleft dependency.
 | pytest-cov | MIT | Coverage gate in `make test` (90% line and branch) | Approved by the author, 2026-11-23. |
 | coverage | Apache-2.0 | Coverage measurement | Installed by pytest-cov. |
 
+## Training (milestone M3; Kaggle environment, not installed in the project)
+
+The scripts in `training/` run on Kaggle's Python image, which already has these packages. They
+are not project dependencies. Licences read from installed metadata on 2026-11-24 (local copies of
+the same packages; Kaggle's versions may differ).
+
+| Package | Licence | Used for | Notes |
+|---|---|---|---|
+| torch | BSD-3-Clause, with bundled Apache-2.0, BSD-2-Clause, BSL-1.0, ISC, MIT and Zlib parts | Training and inference | |
+| torchvision | BSD-3-Clause | ResNet-34 encoder and its ImageNet weights | Weights downloaded at run time from download.pytorch.org. |
+| matplotlib | Matplotlib licence (PSF-based, permissive) | Reliability diagram | Optional; skipped if missing. |
+| kaggle | Apache-2.0 | `training/kaggle_push.py` uploads and starts runs | Command-line tool installed on the author's machine with `uv tool install kaggle`, not in the project. |
+
 ## PDF selection
 
 The initial vector-PDF reader uses pypdf (BSD-3-Clause), recorded above. Its installed
