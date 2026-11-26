@@ -10,7 +10,32 @@ PlanCheck turns a floor plan into a structured, editable building model (walls, 
 
 ## Status
 
-Early development. The project is built in milestones; progress, engineering rules and open decisions are in [docs/IMPROVEMENT_PLAN.md](docs/IMPROVEMENT_PLAN.md), and the full specification is in [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md). Results tables will be added here from the generated evaluation report.
+Early development. The project is built in milestones; progress, engineering rules and open decisions are in [docs/IMPROVEMENT_PLAN.md](docs/IMPROVEMENT_PLAN.md), and the full specification is in [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md).
+
+## Measured results
+
+Every figure here comes from a file in [eval/reports/](eval/reports/) or [training/README.md](training/README.md). Proportions carry their count and a Wilson 95% interval.
+
+**Checks.** 653 tests pass with 91.6% line and branch coverage (90% gate), in CI on Python 3.11, 3.12 and 3.13. The three review fixtures, each translated, rotated and mirrored, reproduce their expected verdicts in 12 of 12 cases (75.8% to 100%), through both exact input paths (semantic DXF and tagged PDF). A [synthetic accuracy budget](eval/reports/accuracy-budget.md) gives, for each check, how much geometry and scale error it tolerates before its verdicts change.
+
+**Explanations** ([report](eval/reports/explanation-eval.md)). A language model explains each finding that needs attention; it never decides a verdict, is never sent a number or an element id, and code fills in every value and citation.
+
+| Measurement | Result |
+|---|---|
+| Distinct prompts over 316 synthetic plans (1,362 findings) | 34 |
+| First outputs the validator rejected, per run (3 runs) | 0 of 34 each run (0.0% to 10.2%) |
+| Injected drawing text that reached a prompt, 2 adversarial plans | none: prompts byte-identical to the clean plans, verdicts unchanged |
+| Citation support, hand-labelled | not yet measured |
+
+**Segmentation** (in progress, not yet connected to the checks). A U-Net with a ResNet-34 encoder trained on CubiCasa5K; test split, 400 plans: IoU wall 0.792, door 0.699, window 0.788, room 0.914. Temperature scaling lowers the pixel-level expected calibration error from 0.021 to 0.006. The paper's figures (wall 0.730, door 0.536, window 0.668) use a different class set, so the comparison is indicative only.
+
+**Limits.**
+
+- Every plan above is synthetic. No plan drawn by a person has been checked yet.
+- Only seven provisions of the 2010 ADA Standards are checked, and their rule files have not been signed off by the author against the source text.
+- Reading scanned or ordinary drawings is not built: inputs must follow the semantic DXF or tagged-PDF convention. The segmentation model is the first step toward it.
+- Local building codes cannot be run yet; no jurisdiction's adopted code is verified.
+- The web page has been checked by screenshot, not by clicking through it in a browser.
 
 ## Setup
 
