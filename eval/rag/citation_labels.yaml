@@ -1,242 +1,3264 @@
+# Citation support for the explanation layer (docs/PROJECT_SPEC.md §11.4).
+#
+# Every distinct explanation the model wrote in the last measurement is listed once.
+# Items from run 1 (`run: 1`) give one explanation for every prompt: label those first.
+# The later runs add the other wordings the model wrote for the same prompts.
+# For each item, read `text` and the `sources` of the sections it cites, then set
+#   label: supported     the cited section supports what the sentence says
+#   label: unsupported   it does not, or the sentence says something the sources do not
+# and add a `note` for anything unsupported. Set `labelled_by` and `labelled_on` once
+# you are done. Regenerating the file keeps every label already given.
+#
+# Recompute the report afterwards with: make eval-explain-report
 labelled_by: null
 labelled_on: null
+model: deepseek/deepseek-v4.1-flash-1017
 items:
 - id: 1
-  plan: missing
-  finding: 1
+  run: 1
+  prompt_hash: 29e6fbbdf101aaab5769c9b156deeb235695cee4d9481c4129ad4ea25e74488f
   rule: ada2010.accessible-route
-  verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: d5c84b014c4d896c7d88980c87c4e69858ff434703a70a51ab929c048c6cc0b8
+  verdict: borderline
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
   cited:
   - 206.2.4
-  text: The route from the exterior to C was checked against §206.2.4, but the result is unsettled
-    because the check could not evaluate level changes and listed exceptions, and a route on
-    plan does not show steps, slopes or thresholds. Review “route from the exterior through
-    D” and confirm the route conditions the check left out.
+  template: 'The accessible route to {element} was checked under {section}, and the result depends
+    on other elements rather than a measurement of its own. The check''s note reads: {detail}. Confirm
+    or measure the borderline element on that route next.'
+  text: 'The accessible route to R07 was checked under §206.2.4, and the result depends on other elements
+    rather than a measurement of its own. The check''s note reads: “route from the exterior through
+    D08, D01”. Confirm or measure the borderline element on that route next.'
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 2
-  plan: missing
-  finding: 2
-  rule: ada2010.door-clear-width
-  verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: c1e2269f3025f3cfed552348386242fd3393fbaa50e17be014b8f71e5099c9c2
+  run: 1
+  prompt_hash: 5087cdc2ca368d7d874e0fe5124cd73cc9b7c0de88d6517832522f8161e50ec1
+  rule: ada2010.accessible-route
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-swing-wall200
+  - variant-corridor-800-close-double_swing-wall200
+  - variant-corridor-800-close-sliding-wall200
+  - +33 more
+  findings: 36
   cited:
-  - 404.2.3
-  text: The clear width of D was checked against §404.2.3, but the result is unknown because
-    “clear width not measured and no deduction configured for 'swing'”. You can supply the missing
-    measurement or configure the swing deduction, then rerun the check.
+  - 206.2.4
+  template: The route from the exterior to {element} was checked under {section}, and the result depends
+    on other elements rather than this room alone, so it stays borderline until those are confirmed.
+    The check's note reads {detail}; confirm the elements along that route, and note that level changes
+    and listed exceptions were not evaluated.
+  text: The route from the exterior to C was checked under §206.2.4, and the result depends on other
+    elements rather than this room alone, so it stays borderline until those are confirmed. The check's
+    note reads “route from the exterior through D”; confirm the elements along that route, and note
+    that level changes and listed exceptions were not evaluated.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 3
-  plan: missing
-  finding: 3
-  rule: ada2010.door-maneuvering-clearance
-  verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 182dfabb7bb1107603ac4af8d426c08a4ca33c8365f79ccafb88a1124428a694
+  run: 1
+  prompt_hash: 8a1ff85fbd24046052ffceb9a2a07a15e4047f2db8cb144cce62dad0b816b5b9
+  rule: ada2010.accessible-route
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-narrow-swing-wall200
+  - variant-corridor-800-narrow-swing-wall650
+  - +144 more
+  findings: 147
   cited:
-  - 404.2.4.1
-  text: The front-approach clearance for D was checked under §404.2.4.1, but the result is unknown
-    because the hinge side or swing direction is missing (“hinge side or swing direction not
-    known”). Please supply that information so the check can settle.
+  - 206.2.4
+  template: The route to {element} was checked against {section}, and the result came out as it did
+    because {detail}. The designer can review the route and the listed exceptions next.
+  text: The route to C was checked against §206.2.4, and the result came out as it did because “no
+    route from the exterior through doors that could comply”. The designer can review the route and
+    the listed exceptions next.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 4
-  plan: narrow
-  finding: 1
+  run: 1
+  prompt_hash: 9b90c116baf2704e76896da3d17148c3a0dd428730baff7b9975a9e8e1902f04
   rule: ada2010.accessible-route
-  verdict: fail
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 8a1ff85fbd24046052ffceb9a2a07a15e4047f2db8cb144cce62dad0b816b5b9
+  verdict: unknown
+  plans:
+  - wide
+  - sample-office
+  - variant-corridor-800-wide-swing-wall200
+  - +37 more
+  findings: 40
   cited:
   - 206.2.4
-  text: The route to C was checked against §206.2.4, and the result came out as it did because
-    “no route from the exterior through doors that could comply”. To move forward, review the
-    route and the listed exceptions the check did not evaluate.
+  template: The route from the exterior to {element} was checked against {section}, but the result
+    stays open because the check can only prove a failure and found none. {detail} Review the level
+    changes and listed exceptions it did not evaluate, then confirm the route on site.
+  text: The route from the exterior to C was checked against §206.2.4, but the result stays open because
+    the check can only prove a failure and found none. “check can only prove fail only; route from
+    the exterior through D” Review the level changes and listed exceptions it did not evaluate, then
+    confirm the route on site.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 5
-  plan: narrow
-  finding: 2
-  rule: ada2010.door-clear-width
-  verdict: fail
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: ed0232e652e14c629357018a90864a321518b5484a6106bbf6a32f9e194b10d0
+  run: 1
+  prompt_hash: d5c84b014c4d896c7d88980c87c4e69858ff434703a70a51ab929c048c6cc0b8
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +90 more
+  findings: 103
   cited:
-  - 404.2.3
-  text: The clear width of D was measured against the minimum in §404.2.3, and the modelled
-    width falls short of 32 in (812.8 mm). To resolve it, review “clear width as modelled” and
-    consider the exceptions the check did not evaluate.
+  - 206.2.4
+  template: The route from the exterior to {element} was checked against {section}, but the result
+    stayed open because the check could not evaluate level changes and listed exceptions. Review {detail}
+    and confirm the route's steps, slopes and thresholds, and whether an exception applies.
+  text: The route from the exterior to C was checked against §206.2.4, but the result stayed open
+    because the check could not evaluate level changes and listed exceptions. Review “route from the
+    exterior through D” and confirm the route's steps, slopes and thresholds, and whether an exception
+    applies.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 6
-  plan: narrow
-  finding: 3
-  rule: ada2010.door-maneuvering-clearance
-  verdict: fail
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 33206dd070aba1d837192879077101b6827325098c797e4d4e11ebe6ef2013dd
+  run: 1
+  prompt_hash: c49ebdf788abe515a42e6d00b91ccf88737f3f67118e80d28edd8ccbf3ec177d
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 6
   cited:
-  - 404.2.4
-  - 404.2.4.1
-  text: 'The front-approach clearance beside the latch on the pull side of D was checked under
-    §404.2.4.1, and the measured depth falls short of what the table requires. The check''s
-    note reads: “front approach assumed; short on pull-side depth 801 mm, pull-side latch clearance
-    0 mm”. To resolve it, the designer can look at the side-approach clearances in §404.2.4.1
-    or check whether an exception in §404.2.4 applies.'
+  - 206.2.4
+  template: The route from the exterior to {element} was checked against {section}, but the result
+    stays open because the check can only prove a failure and found none. {detail} Review the level
+    changes and listed exceptions the check did not evaluate, then confirm the route on site.
+  text: The route from the exterior to R01 was checked against §206.2.4, but the result stays open
+    because the check can only prove a failure and found none. “check can only prove fail only; route
+    from the exterior through D08, D07” Review the level changes and listed exceptions the check did
+    not evaluate, then confirm the route on site.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 7
-  plan: narrow
-  finding: 5
-  rule: ada2010.walking-surface-clear-width
-  verdict: fail
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: c8967c6a66a928cdc56a4331c20e09cbf6154f65cb25c2371a0d8a7c593dc7c4
+  run: 1
+  prompt_hash: ddb128fae833466b9ce113a05a901df7eec9b57106d86b9ee111854ac227d813
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 6
   cited:
-  - 403.5.1
-  text: The clear width of C was checked against §403.5.1, and the narrow run in the width profile
-    is what makes the result come out as it does. To see the measured and required values, compare
-    minimum clear width 800 mm (31.50 in) ± 0 mm (≥ 36 in); narrow run 1 length 5000 mm (196.85
-    in) ± 0 mm (≤ 24 in) with 36 in (914.4 mm), and review “event-exact transverse width profile;
-    narrow run 5000 mm” before deciding how to widen the route.
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result stays open because
+    the check can only prove a failure and found none, and it did not evaluate level-changes or listed-exceptions.
+    Review {detail} and confirm the route from the exterior through the listed spaces, including steps,
+    slopes and thresholds.
+  text: The route to R03 was checked against §206.2.4, but the result stays open because the check
+    can only prove a failure and found none, and it did not evaluate level-changes or listed-exceptions.
+    Review “check can only prove fail only; route from the exterior through D08, D07, D03” and confirm
+    the route from the exterior through the listed spaces, including steps, slopes and thresholds.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 8
-  plan: sample-office
-  finding: 1
+  run: 1
+  prompt_hash: 1ce7edfa1c4cfb0695e0f943e91e8cdf7fe197222196011d9187c92dad74c5d4
   rule: ada2010.accessible-route
   verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: c49ebdf788abe515a42e6d00b91ccf88737f3f67118e80d28edd8ccbf3ec177d
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
   cited:
   - 206.2.4
-  text: The route from the exterior to R01 was checked against §206.2.4, but the check can only
-    prove a failure and found none, so the result stays open. Review “check can only prove fail
-    only; route from the exterior through D08, D07” and confirm the route's level changes and
-    any listed exceptions.
+  template: The route from the exterior to {element} was checked against {section}, but the check
+    can only prove a failure and found none, so the result stays open. Review {detail} and confirm
+    the route, including any level changes and listed exceptions, before relying on it.
+  text: The route from the exterior to R05 was checked against §206.2.4, but the check can only prove
+    a failure and found none, so the result stays open. Review “check can only prove fail only; route
+    from the exterior through D08, D07, D05, D02” and confirm the route, including any level changes
+    and listed exceptions, before relying on it.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 9
-  plan: sample-office
-  finding: 3
+  run: 1
+  prompt_hash: 31c2e233498f93e49851ec9e26f48f71fb2abc79bef265b00036441f3ee3f26b
   rule: ada2010.accessible-route
   verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: ddb128fae833466b9ce113a05a901df7eec9b57106d86b9ee111854ac227d813
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +17 more
+  findings: 39
   cited:
   - 206.2.4
-  text: The route from the exterior to R03 was checked against §206.2.4, but the check can only
-    prove a failure and found none, so the result stays open. Review “check can only prove fail
-    only; route from the exterior through D08, D07, D03” and confirm the route, including any
-    level changes and listed exceptions, before relying on it.
+  template: The route to {element} was checked against {section}, but the result is unsettled because
+    the check could not evaluate level changes and listed exceptions, and a route on plan is not proof
+    of an accessible route. The designer can review {detail} and confirm those exceptions and level
+    changes directly.
+  text: The route to R02 was checked against §206.2.4, but the result is unsettled because the check
+    could not evaluate level changes and listed exceptions, and a route on plan is not proof of an
+    accessible route. The designer can review “route from the exterior through D06, D05” and confirm
+    those exceptions and level changes directly.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 10
-  plan: sample-office
-  finding: 5
+  run: 1
+  prompt_hash: 058b65b0c9720fe1c09f937f4f94435e860efd36502dcbae02d917462288a28a
   rule: ada2010.accessible-route
   verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 1ce7edfa1c4cfb0695e0f943e91e8cdf7fe197222196011d9187c92dad74c5d4
+  plans:
+  - synthetic-0
+  - synthetic-10
+  findings: 2
   cited:
   - 206.2.4
-  text: The route from the exterior to R05 was checked against §206.2.4, but the check can only
-    prove a failure and found none, so the result stays open. Review “check can only prove fail
-    only; route from the exterior through D08, D07, D05, D02” and confirm the route, including
-    any level changes and listed exceptions, before relying on this.
+  template: The route to {element} was checked under {section}, but the result is unknown because
+    the check could not evaluate level changes and listed exceptions, and a route on plan does not
+    prove an accessible route. The designer can review {detail} and confirm those conditions.
+  text: The route to R03 was checked under §206.2.4, but the result is unknown because the check could
+    not evaluate level changes and listed exceptions, and a route on plan does not prove an accessible
+    route. The designer can review “route from the exterior through D06, D05, D04, D02, D03” and confirm
+    those conditions.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 11
-  plan: sample-office
-  finding: 6
+  run: 1
+  prompt_hash: 99ed913e8ed2524935db51eb408b9b59f1352ccae326b29cdcaa3b23d88a685c
   rule: ada2010.accessible-route
   verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 9b90c116baf2704e76896da3d17148c3a0dd428730baff7b9975a9e8e1902f04
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-6
+  - +5 more
+  findings: 11
   cited:
   - 206.2.4
-  text: The route from the exterior to R06 was checked against §206.2.4, but the check can only
-    prove a failure and found none, so the result stays open. Review “check can only prove fail
-    only; route from the exterior through D08” and confirm the route, including any level changes
-    and listed exceptions, before relying on it.
+  template: The route to {element} was checked against {section}, but the result is unsettled because
+    the check did not evaluate level changes or listed exceptions. Review the route noted as {detail}
+    and confirm those conditions so the route can be verified.
+  text: The route to R04 was checked against §206.2.4, but the result is unsettled because the check
+    did not evaluate level changes or listed exceptions. Review the route noted as “route from the
+    exterior through D06, D05, D04, D02” and confirm those conditions so the route can be verified.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 12
-  plan: sample-office
-  finding: 7
+  run: 1
+  prompt_hash: 2656243683d6e6e49543f105e5cdef4b54719618889a3ad609db623b0542a84d
   rule: ada2010.accessible-route
-  verdict: borderline
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 29e6fbbdf101aaab5769c9b156deeb235695cee4d9481c4129ad4ea25e74488f
+  verdict: unknown
+  plans:
+  - synthetic-0
+  findings: 1
   cited:
   - 206.2.4
-  text: The route to R07 was checked under §206.2.4, and the result depends on other elements
-    rather than on R07 itself, so it stays borderline until those are confirmed. The check's
-    note reads “route from the exterior through D08, D01”; confirm the route elements it names,
-    and review the level-changes and listed-exceptions it did not evaluate.
+  template: The route to {element} was checked against {section}, but the result is unsettled because
+    the check could not evaluate level-changes and listed-exceptions, and a route on plan is not proof
+    of an accessible route. To settle it, review those unevaluated conditions along the route described
+    in {detail}.
+  text: The route to R05 was checked against §206.2.4, but the result is unsettled because the check
+    could not evaluate level-changes and listed-exceptions, and a route on plan is not proof of an
+    accessible route. To settle it, review those unevaluated conditions along the route described
+    in “route from the exterior through D06, D05, D04, D02, D03, D01”.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 13
-  plan: sample-office
-  finding: 8
-  rule: ada2010.door-clear-width
-  verdict: borderline
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 5e5d9154992e7a32ee5a99c7881305e7ae8f44bda8a2eba77a461125e1cad8aa
+  run: 1
+  prompt_hash: 148523ec4151c45537080de07cfd138f20e63bf023d7c9bac02b0f072e981b67
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +12 more
+  findings: 21
   cited:
-  - 404.2.3
-  text: The clear width of D01 was checked against 32 in (812.8 mm) under §404.2.3, and the
-    modelled value 815 mm (32.09 in) ± 5 mm sits within measurement uncertainty of that requirement,
-    so the outcome cannot be settled from the model alone. Confirm the clear width on site,
-    and note that the alteration latch-stop exception was not evaluated.
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unknown because
+    the check could not evaluate level changes and listed exceptions. Review {detail} and confirm
+    the route's level changes and any exemptions before relying on this result.
+  text: The route to R06 was checked against §206.2.4, but the result is unknown because the check
+    could not evaluate level changes and listed exceptions. Review “route from the exterior through
+    D06, D05, D04” and confirm the route's level changes and any exemptions before relying on this
+    result.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
   label: null
   note: null
 - id: 14
-  plan: sample-office
-  finding: 11
+  run: 1
+  prompt_hash: 5e5d9154992e7a32ee5a99c7881305e7ae8f44bda8a2eba77a461125e1cad8aa
   rule: ada2010.door-clear-width
-  verdict: fail
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 9c6196be5af88865135c7b2be5a989b4a130e45d4cf43ae5e7274906078b338f
+  verdict: borderline
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
   cited:
   - 404.2.3
-  text: The clear width of D04 was measured as 710 mm (27.95 in) ± 0 mm against the minimum
-    in §404.2.3, and it came out short. To resolve this, review the modelled opening and consider
-    whether the alteration-latch-stop exception applies, since the check did not evaluate it.
+  template: The clear width of {element} was compared with the minimum in {section}, and the modelled
+    value {measured} sits within uncertainty of {required}, so the outcome is borderline. Confirm
+    the width on site, and check whether the alteration-latch-stop exception applies.
+  text: The clear width of D01 was compared with the minimum in §404.2.3, and the modelled value 815
+    mm (32.09 in) ± 5 mm sits within uncertainty of 32 in (812.8 mm), so the outcome is borderline.
+    Confirm the width on site, and check whether the alteration-latch-stop exception applies.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
   label: null
   note: null
 - id: 15
-  plan: sample-office
-  finding: 24
-  rule: ada2010.door-maneuvering-clearance
-  verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: 71bc59195409f02a8547ff25d8b0ed44ab9d32f957c217bf349aa7424f24afd4
+  run: 1
+  prompt_hash: fa88327d8ebb05271706a2632be1b56ce1c6ac5ef1b9a1a713bfbc33bcfbc872
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-swing-wall200
+  - variant-corridor-800-close-sliding-wall200
+  - variant-corridor-800-close-swing-wall200-noswing
+  - +21 more
+  findings: 24
   cited:
-  - 404.2.4.1
-  text: The front-approach maneuvering clearance at D01 was checked under §404.2.4.1, but the
-    result is unknown because this check can only prove a failure and found none. Review “check
-    can only prove fail only; front approach assumed; clear of walls and modelled fixtures”
-    and confirm the approach direction and hardware assumptions before relying on this result.
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the modelled value {measured}
+    sits within uncertainty of {required}, so the outcome is borderline. Measure the opening on site
+    to confirm the clear width, and check whether any of the listed exceptions apply.
+  text: The clear width of D was checked against §404.2.3, and the modelled value 815 mm (32.09 in)
+    ± 5 mm sits within uncertainty of 32 in (812.8 mm), so the outcome is borderline. Measure the
+    opening on site to confirm the clear width, and check whether any of the listed exceptions apply.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
   label: null
   note: null
 - id: 16
-  plan: sample-office
-  finding: 41
-  rule: ada2010.toilet-room-turning-space
+  run: 1
+  prompt_hash: 95c97c58280578b146d0706658960c66e1c14daaee1400f41c2a48fce63dc043
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-double_swing-wall200
+  - variant-corridor-800-close-double_swing-wall200-noswing
+  - variant-bathroom-800-close-double_swing-wall200
+  - +9 more
+  findings: 12
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the measured value {measured}
+    sits within the uncertainty of the required {required}, so the outcome cannot be settled from
+    the model alone. The check noted {detail}; confirm the width on site, and review the exceptions
+    it did not evaluate.
+  text: 'The clear width of D was checked against §404.2.3, and the measured value 815 mm (32.09 in)
+    ± 5 mm sits within the uncertainty of the required 32 in (812.8 mm), so the outcome cannot be
+    settled from the model alone. The check noted “clear width as modelled; double-leaf door: one
+    active leaf is judged”; confirm the width on site, and review the exceptions it did not evaluate.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 17
+  run: 1
+  prompt_hash: ed0232e652e14c629357018a90864a321518b5484a6106bbf6a32f9e194b10d0
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-narrow-swing-wall200
+  - variant-corridor-800-narrow-sliding-wall200
+  - +24 more
+  findings: 27
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against the minimum opening width in {section},
+    and the modelled width of {measured} falls short of the required {required}. The check noted {detail},
+    so the designer can review the opening geometry and adjust the door or frame to reach the required
+    width.
+  text: The clear width of D was checked against the minimum opening width in §404.2.3, and the modelled
+    width of 700 mm (27.56 in) ± 0 mm falls short of the required 32 in (812.8 mm). The check noted
+    “clear width as modelled”, so the designer can review the opening geometry and adjust the door
+    or frame to reach the required width.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 18
+  run: 1
+  prompt_hash: 9c6196be5af88865135c7b2be5a989b4a130e45d4cf43ae5e7274906078b338f
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was measured as {measured} against the minimum in {section},
+    and it came out short of {required}. The check did not evaluate the alteration latch-stop exception,
+    so review {detail} and consider whether that exception applies before adjusting the door.
+  text: The clear width of D04 was measured as 710 mm (27.95 in) ± 0 mm against the minimum in §404.2.3,
+    and it came out short of 32 in (812.8 mm). The check did not evaluate the alteration latch-stop
+    exception, so review “clear width as modelled” and consider whether that exception applies before
+    adjusting the door.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 19
+  run: 1
+  prompt_hash: 9145524c1a0f9e5766784baaf113e276d55cbab16c39346933093ffc4ee76201
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-swing-wall650
+  - variant-corridor-800-narrow-sliding-wall650
+  - variant-corridor-800-narrow-swing-wall650-noswing
+  - +69 more
+  findings: 72
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the modelled opening is
+    deeper than the stated depth, so the larger minimum applies and the measured {measured} falls
+    short of {required}. The designer can review {detail} and adjust the opening or its depth.
+  text: 'The clear width of D was checked against §404.2.3, and the modelled opening is deeper than
+    the stated depth, so the larger minimum applies and the measured 700 mm (27.56 in) ± 0 mm falls
+    short of 36 in (914.4 mm). The designer can review “clear width as modelled; opening deeper than
+    24 in: larger minimum applies” and adjust the opening or its depth.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 20
+  run: 1
+  prompt_hash: 87e08daf158cdc9239fae015d75a5fd4d38b5138542bf8f4eeca9832491d6d02
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-double_swing-wall200
+  - variant-corridor-800-narrow-double_swing-wall200-noswing
+  - variant-bathroom-800-narrow-double_swing-wall200
+  - +9 more
+  findings: 12
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the modelled width of
+    {measured} falls short of the required {required}. The check noted {detail}; you can review the
+    door width or the exceptions the check did not evaluate.
+  text: 'The clear width of D was checked against §404.2.3, and the modelled width of 700 mm (27.56
+    in) ± 0 mm falls short of the required 32 in (812.8 mm). The check noted “clear width as modelled;
+    double-leaf door: one active leaf is judged”; you can review the door width or the exceptions
+    the check did not evaluate.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 21
+  run: 1
+  prompt_hash: 9928a5337b57ac18c376edf1a350ff81cd4559a06bd4ef39082d3399120e8c73
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-double_swing-wall650
+  - variant-corridor-800-narrow-double_swing-wall650-noswing
+  - variant-corridor-800-close-double_swing-wall650
+  - +33 more
+  findings: 36
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the modelled width of
+    {measured} falls short of the required {required}. To proceed, review {detail} and consider the
+    exceptions the check did not evaluate, such as alteration-latch-stop, not-a-public-entrance and
+    other-entrance-types.
+  text: 'The clear width of D was checked against §404.2.3, and the modelled width of 700 mm (27.56
+    in) ± 0 mm falls short of the required 36 in (914.4 mm). To proceed, review “clear width as modelled;
+    opening deeper than 24 in: larger minimum applies; double-leaf door: one active leaf is judged”
+    and consider the exceptions the check did not evaluate, such as alteration-latch-stop, not-a-public-entrance
+    and other-entrance-types.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 22
+  run: 1
+  prompt_hash: c1e2269f3025f3cfed552348386242fd3393fbaa50e17be014b8f71e5099c9c2
+  rule: ada2010.door-clear-width
   verdict: unknown
-  model: deepseek/deepseek-v4.1-flash-1017
-  prompt_hash: c6d57764580512e53bf52d83fd1af89cec8f23b3abdcefe7b22726c7da29413a
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +42 more
+  findings: 55
+  cited:
+  - 404.2.3
+  template: 'The clear width of {element} could not be settled under {section} because the measurement
+    is missing and no swing deduction is configured. The check note reads: {detail}. Supply the missing
+    measurement or deduction so the width can be evaluated.'
+  text: 'The clear width of D could not be settled under §404.2.3 because the measurement is missing
+    and no swing deduction is configured. The check note reads: “clear width not measured and no deduction
+    configured for ''swing''”. Supply the missing measurement or deduction so the width can be evaluated.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 23
+  run: 1
+  prompt_hash: b43b929f9464ea9471d876bd220004b8e4f224e1d1e6734510131b5870af908e
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - variant-corridor-800-none-double_swing-wall200
+  - variant-corridor-800-none-double_swing-wall650
+  - variant-corridor-800-none-double_swing-wall200-noswing
+  - +21 more
+  findings: 24
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is unknown
+    because {detail}. You can supply the missing measurement or configure the deduction for that door
+    type, then run the check again.
+  text: The clear width of D was checked against §404.2.3, but the result is unknown because “clear
+    width not measured and no deduction configured for 'double_swing'”. You can supply the missing
+    measurement or configure the deduction for that door type, then run the check again.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 24
+  run: 1
+  prompt_hash: 5beb78b06ab8579c46b5c22b685aac85ca3c3f82a73645f62de1ffc26751596b
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - variant-corridor-800-none-sliding-wall200
+  - variant-corridor-800-none-sliding-wall650
+  - variant-corridor-800-none-sliding-wall200-noswing
+  - +21 more
+  findings: 24
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is unknown
+    because {detail}. You can supply the missing measurement or deduction setting and re-run the check,
+    and review the exceptions it did not evaluate.
+  text: The clear width of D was checked against §404.2.3, but the result is unknown because “clear
+    width not measured and no deduction configured for 'sliding'”. You can supply the missing measurement
+    or deduction setting and re-run the check, and review the exceptions it did not evaluate.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 25
+  run: 1
+  prompt_hash: 7b3ebbb4dc1805cabdedf2a877ada815b1e438905a2405dfa6da4d5a71eabb11
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +17 more
+  findings: 93
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is inconclusive
+    because {detail}. You can supply the missing measurement or deduction setting and rerun the check,
+    and review the alteration-latch-stop exception under {section:404.2.3} if it applies.
+  text: The clear width of D01 was checked against §404.2.3, but the result is inconclusive because
+    “clear width not measured and no deduction configured for 'swing'”. You can supply the missing
+    measurement or deduction setting and rerun the check, and review the alteration-latch-stop exception
+    under §404.2.3 if it applies.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 26
+  run: 1
+  prompt_hash: 33206dd070aba1d837192879077101b6827325098c797e4d4e11ebe6ef2013dd
+  rule: ada2010.door-maneuvering-clearance
+  verdict: fail
+  plans:
+  - wide
+  - narrow
+  - sample-office
+  - +53 more
+  findings: 56
+  cited:
+  - 404.2.4.1
+  template: The clear floor space in front of {element} and beside the latch on the pull side was
+    checked against {section}, and the front approach assumed by the check came out short. To proceed,
+    review {detail} and consider whether a side approach or an exception applies.
+  text: The clear floor space in front of D and beside the latch on the pull side was checked against
+    §404.2.4.1, and the front approach assumed by the check came out short. To proceed, review “front
+    approach assumed; short on pull-side depth 1001 mm, pull-side latch clearance 0 mm” and consider
+    whether a side approach or an exception applies.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 27
+  run: 1
+  prompt_hash: a9aded64ce6264e51603795dfc148930d214cebd85ec815eeb512dfe08bed510
+  rule: ada2010.door-maneuvering-clearance
+  verdict: fail
+  plans:
+  - synthetic-2
+  - synthetic-8
+  - synthetic-9
+  - +5 more
+  findings: 12
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance for {element} was checked against {section}, and the result
+    came out as it did because the pull-side depth and latch clearance fall short of {required}. The
+    designer can review {detail} and consider whether a side approach or a listed exception applies.
+  text: The front-approach clearance for D01 was checked against §404.2.4.1, and the result came out
+    as it did because the pull-side depth and latch clearance fall short of pull 60 in deep + 18 in
+    beyond latch; push 48 in deep. The designer can review “front approach assumed; short on pull-side
+    depth 362 mm, pull-side latch clearance 362 mm” and consider whether a side approach or a listed
+    exception applies.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 28
+  run: 1
+  prompt_hash: 182dfabb7bb1107603ac4af8d426c08a4ca33c8365f79ccafb88a1124428a694
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200-noswing
+  - variant-corridor-800-none-swing-wall650-noswing
+  - +94 more
+  findings: 97
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance for {element} was checked under {section}, but the result
+    could not be settled because the hinge side or swing direction is not known. Please confirm the
+    hinge side and swing direction so the check can be run again.
+  text: The front-approach clearance for D was checked under §404.2.4.1, but the result could not
+    be settled because the hinge side or swing direction is not known. Please confirm the hinge side
+    and swing direction so the check can be run again.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 29
+  run: 1
+  prompt_hash: 71bc59195409f02a8547ff25d8b0ed44ab9d32f957c217bf349aa7424f24afd4
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - sample-office
+  - synthetic-0
+  - synthetic-1
+  - +20 more
+  findings: 102
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance for {element} was checked under {section}, but the check
+    can only prove a failure, so no settled result came out. {detail} You can review the modelled
+    clearance and confirm the approach direction and hardware assumptions.
+  text: The front-approach clearance for D01 was checked under §404.2.4.1, but the check can only
+    prove a failure, so no settled result came out. “check can only prove fail only; front approach
+    assumed; clear of walls and modelled fixtures” You can review the modelled clearance and confirm
+    the approach direction and hardware assumptions.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 30
+  run: 1
+  prompt_hash: 8060927e1b767b3399aff28dcf3c22dff4c0532233c39cd36725d5da35465616
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - variant-corridor-1525-none-swing-wall200
+  - variant-corridor-1525-none-double_swing-wall200
+  - variant-corridor-1525-narrow-swing-wall200
+  - +65 more
+  findings: 77
+  cited:
+  - 404.2.4.1
+  template: The check applied {section} to the front approach at {element}, but it can only prove
+    a failure and found none, so the result stays open. Review {detail} and confirm the approach direction
+    and door hardware before relying on this result.
+  text: The check applied §404.2.4.1 to the front approach at D, but it can only prove a failure and
+    found none, so the result stays open. Review “check can only prove fail only; front approach assumed;
+    clear of walls and modelled fixtures” and confirm the approach direction and door hardware before
+    relying on this result.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 31
+  run: 1
+  prompt_hash: 8a5c619fb3ec2f80bd118aec39f9d73735e1d0d3e4ea985a90a9d0f6343be921
+  rule: ada2010.toilet-room-turning-space
+  verdict: fail
+  plans:
+  - variant-bathroom-800-none-swing-wall200
+  - variant-bathroom-800-none-swing-wall650
+  - variant-bathroom-800-none-double_swing-wall200
+  - +45 more
+  findings: 48
   cited:
   - 603.2.1
-  text: 'The check looked for a turning space in R02 under §603.2.1, but could not settle the
-    result because it can only prove a failure and fixtures are not modelled. The note: “check
-    can only prove fail only; largest circle 3100 mm; T-shape pass; fits as a circle; no fixtures
-    modelled”. To get a settled answer, the designer can model the fixtures or confirm the scoping
-    exceptions apply.'
+  template: The turning space inside {element} was checked against {section}, and the result came
+    out as it did because the check found no compliant circle or T-shape. The designer can review
+    {detail} and consider the unevaluated knee-and-toe-clearance exception.
+  text: The turning space inside C was checked against §603.2.1, and the result came out as it did
+    because the check found no compliant circle or T-shape. The designer can review “largest circle
+    800 mm; T-shape fail; no fixtures modelled” and consider the unevaluated knee-and-toe-clearance
+    exception.
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 32
+  run: 1
+  prompt_hash: c6d57764580512e53bf52d83fd1af89cec8f23b3abdcefe7b22726c7da29413a
+  rule: ada2010.toilet-room-turning-space
+  verdict: unknown
+  plans:
+  - sample-office
+  - variant-bathroom-2000-none-swing-wall200
+  - variant-bathroom-2000-none-swing-wall650
+  - +59 more
+  findings: 68
+  cited:
+  - 603.2.1
+  template: The turning space for {element} was checked against {section}, but the result stays open
+    because the check can only prove a failure and found none. Review {detail} and confirm the missing
+    inputs so the result can settle.
+  text: The turning space for R02 was checked against §603.2.1, but the result stays open because
+    the check can only prove a failure and found none. Review “check can only prove fail only; largest
+    circle 3100 mm; T-shape pass; fits as a circle; no fixtures modelled” and confirm the missing
+    inputs so the result can settle.
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 33
+  run: 1
+  prompt_hash: 6b5cafa230a1e09fef0c9cfb7304e86f4ce271c1756de6f250e7924567f142a8
+  rule: ada2010.toilet-room-turning-space
+  verdict: unknown
+  plans:
+  - variant-bathroom-1525-none-swing-wall200
+  - variant-bathroom-1525-none-swing-wall650
+  - variant-bathroom-1525-none-double_swing-wall200
+  - +45 more
+  findings: 48
+  cited:
+  - 603.2.1
+  template: 'The turning space for {element} was checked against {section}, but the result stays open
+    because the check can only prove a failure and found none, as its note shows: {detail}. To settle
+    it, model the fixtures in section so knee-and-toe clearance can be credited, and confirm whether
+    any scoping exception applies.'
+  text: 'The turning space for C was checked against §603.2.1, but the result stays open because the
+    check can only prove a failure and found none, as its note shows: “check can only prove fail only;
+    largest circle 1525 mm; T-shape borderline; fits as a circle; no fixtures modelled”. To settle
+    it, model the fixtures in section so knee-and-toe clearance can be credited, and confirm whether
+    any scoping exception applies.'
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 34
+  run: 1
+  prompt_hash: c8967c6a66a928cdc56a4331c20e09cbf6154f65cb25c2371a0d8a7c593dc7c4
+  rule: ada2010.walking-surface-clear-width
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +48 more
+  findings: 51
+  cited:
+  - 403.5.1
+  template: The clear width of {element} was checked against {section}, and the measured {measured}
+    is below the required {required}, so the result falls short. The note reads {detail}; the designer
+    can review the turn and passing exceptions, which are not evaluated here, and check {section:403.5.1}
+    for the allowed narrower stretch.
+  text: The clear width of C was checked against §403.5.1, and the measured minimum clear width 800
+    mm (31.50 in) ± 0 mm (≥ 36 in); narrow run 1 length 5000 mm (196.85 in) ± 0 mm (≤ 24 in) is below
+    the required 36 in (914.4 mm), so the result falls short. The note reads “event-exact transverse
+    width profile; narrow run 5000 mm”; the designer can review the turn and passing exceptions, which
+    are not evaluated here, and check §403.5.1 for the allowed narrower stretch.
+  sources:
+    403.5.1:
+    - 'paraphrase: A walking surface on an accessible route needs a minimum clear width, with a short
+      narrower stretch allowed.'
+    - 'requirement: the clear width of walking surfaces shall be 36 inches (915 mm) minimum.'
+    - 'exception: The width may drop to a smaller value for a short length, if the narrow stretches
+      are far enough apart. Source text: The clear width shall be permitted to be reduced to 32 inches
+      (815 mm) minimum for a length of 24 inches (610 mm) maximum provided that reduced width segments
+      are separated by segments that are 48 inches (1220 mm) long minimum and 36 inches (915 mm) wide
+      minimum.'
+    - 'exception: Sections 403.5.2 and 403.5.3 set other widths at 180-degree turns and require passing
+      spaces on long narrow routes. The tool does not check them. Source text: Except as provided
+      in 403.5.2 and 403.5.3'
+  label: null
+  note: null
+- id: 35
+  run: 2
+  prompt_hash: 29e6fbbdf101aaab5769c9b156deeb235695cee4d9481c4129ad4ea25e74488f
+  rule: ada2010.accessible-route
+  verdict: borderline
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked under {section}, and the result depends on other elements
+    rather than on {element} itself, so it stays borderline until those are confirmed. The check's
+    note reads {detail}; confirm the route elements it names, and review the level-changes and listed-exceptions
+    it did not evaluate.
+  text: The route to R07 was checked under §206.2.4, and the result depends on other elements rather
+    than on R07 itself, so it stays borderline until those are confirmed. The check's note reads “route
+    from the exterior through D08, D01”; confirm the route elements it names, and review the level-changes
+    and listed-exceptions it did not evaluate.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 36
+  run: 2
+  prompt_hash: 5087cdc2ca368d7d874e0fe5124cd73cc9b7c0de88d6517832522f8161e50ec1
+  rule: ada2010.accessible-route
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-swing-wall200
+  - variant-corridor-800-close-double_swing-wall200
+  - variant-corridor-800-close-sliding-wall200
+  - +33 more
+  findings: 36
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked under {section}, and the result depends
+    on other elements rather than this room alone, so it stays borderline until those are confirmed.
+    The check's note reads {detail}; confirm the route elements it names, and review the level-changes
+    and listed-exceptions it did not evaluate.
+  text: The route from the exterior to C was checked under §206.2.4, and the result depends on other
+    elements rather than this room alone, so it stays borderline until those are confirmed. The check's
+    note reads “route from the exterior through D”; confirm the route elements it names, and review
+    the level-changes and listed-exceptions it did not evaluate.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 37
+  run: 2
+  prompt_hash: 8a1ff85fbd24046052ffceb9a2a07a15e4047f2db8cb144cce62dad0b816b5b9
+  rule: ada2010.accessible-route
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-narrow-swing-wall200
+  - variant-corridor-800-narrow-swing-wall650
+  - +144 more
+  findings: 147
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, and the result came out as it did
+    because {detail}. The designer can review the route and the exceptions the check did not evaluate,
+    then adjust the design and run the check again.
+  text: The route to C was checked against §206.2.4, and the result came out as it did because “no
+    route from the exterior through doors that could comply”. The designer can review the route and
+    the exceptions the check did not evaluate, then adjust the design and run the check again.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 38
+  run: 2
+  prompt_hash: 9b90c116baf2704e76896da3d17148c3a0dd428730baff7b9975a9e8e1902f04
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - wide
+  - sample-office
+  - variant-corridor-800-wide-swing-wall200
+  - +37 more
+  findings: 40
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked against {section}, but the result
+    stays open because the check can only prove a failure and found none. To settle it, review the
+    route for the level changes and listed exceptions the check did not evaluate; the check's note
+    reads {detail}.
+  text: The route from the exterior to C was checked against §206.2.4, but the result stays open because
+    the check can only prove a failure and found none. To settle it, review the route for the level
+    changes and listed exceptions the check did not evaluate; the check's note reads “check can only
+    prove fail only; route from the exterior through D”.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 39
+  run: 2
+  prompt_hash: d5c84b014c4d896c7d88980c87c4e69858ff434703a70a51ab929c048c6cc0b8
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +90 more
+  findings: 103
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked against {section}, but the result
+    stayed open because the check could not evaluate level changes and listed exceptions. Review {detail}
+    and confirm the route conditions the check left out.
+  text: The route from the exterior to C was checked against §206.2.4, but the result stayed open
+    because the check could not evaluate level changes and listed exceptions. Review “route from the
+    exterior through D” and confirm the route conditions the check left out.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 40
+  run: 2
+  prompt_hash: c49ebdf788abe515a42e6d00b91ccf88737f3f67118e80d28edd8ccbf3ec177d
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 6
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked against {section}, but the check
+    can only prove a failure and found none, so the result stays open. Review {detail} and confirm
+    the route, including any level changes and listed exceptions, before relying on this.
+  text: The route from the exterior to R01 was checked against §206.2.4, but the check can only prove
+    a failure and found none, so the result stays open. Review “check can only prove fail only; route
+    from the exterior through D08, D07” and confirm the route, including any level changes and listed
+    exceptions, before relying on this.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 41
+  run: 2
+  prompt_hash: ddb128fae833466b9ce113a05a901df7eec9b57106d86b9ee111854ac227d813
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 6
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result stays open because
+    the check can only prove a failure and found none, and it did not evaluate level changes or listed
+    exceptions. To settle it, review {detail} and confirm the route from the exterior.
+  text: The route to R03 was checked against §206.2.4, but the result stays open because the check
+    can only prove a failure and found none, and it did not evaluate level changes or listed exceptions.
+    To settle it, review “check can only prove fail only; route from the exterior through D08, D07,
+    D03” and confirm the route from the exterior.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 42
+  run: 2
+  prompt_hash: 1ce7edfa1c4cfb0695e0f943e91e8cdf7fe197222196011d9187c92dad74c5d4
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the check can only prove a failure
+    and found none, so the result stays open. {detail} Review the route for level changes and any
+    listed exceptions, since those were not evaluated.
+  text: The route to R05 was checked against §206.2.4, but the check can only prove a failure and
+    found none, so the result stays open. “check can only prove fail only; route from the exterior
+    through D08, D07, D05, D02” Review the route for level changes and any listed exceptions, since
+    those were not evaluated.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 43
+  run: 2
+  prompt_hash: 31c2e233498f93e49851ec9e26f48f71fb2abc79bef265b00036441f3ee3f26b
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +17 more
+  findings: 39
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unknown because
+    the check could not evaluate level changes and listed exceptions, and a route on plan is not proof
+    of an accessible route. To settle it, review the route from the exterior through {detail} for
+    steps, slopes and thresholds.
+  text: The route to R02 was checked against §206.2.4, but the result is unknown because the check
+    could not evaluate level changes and listed exceptions, and a route on plan is not proof of an
+    accessible route. To settle it, review the route from the exterior through “route from the exterior
+    through D06, D05” for steps, slopes and thresholds.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 44
+  run: 2
+  prompt_hash: 058b65b0c9720fe1c09f937f4f94435e860efd36502dcbae02d917462288a28a
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-10
+  findings: 2
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result stays open because
+    the check could not evaluate level-changes and listed-exceptions, and its note reads {detail}.
+    Review those unevaluated conditions for the route and supply the missing information so the check
+    can settle.
+  text: The route to R03 was checked against §206.2.4, but the result stays open because the check
+    could not evaluate level-changes and listed-exceptions, and its note reads “route from the exterior
+    through D06, D05, D04, D02, D03”. Review those unevaluated conditions for the route and supply
+    the missing information so the check can settle.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 45
+  run: 2
+  prompt_hash: 99ed913e8ed2524935db51eb408b9b59f1352ccae326b29cdcaa3b23d88a685c
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-6
+  - +5 more
+  findings: 11
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unknown because
+    the check could not evaluate level-changes and listed-exceptions, and its note reads {detail}.
+    Review those unevaluated conditions for the route and confirm the missing input so the check can
+    settle.
+  text: The route to R04 was checked against §206.2.4, but the result is unknown because the check
+    could not evaluate level-changes and listed-exceptions, and its note reads “route from the exterior
+    through D06, D05, D04, D02”. Review those unevaluated conditions for the route and confirm the
+    missing input so the check can settle.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 46
+  run: 2
+  prompt_hash: 2656243683d6e6e49543f105e5cdef4b54719618889a3ad609db623b0542a84d
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  findings: 1
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unsettled because
+    the check could not evaluate level changes and listed exceptions, and a route on plan does not
+    prove an accessible route. Review {detail} and confirm the level changes and any exceptions along
+    that route.
+  text: The route to R05 was checked against §206.2.4, but the result is unsettled because the check
+    could not evaluate level changes and listed exceptions, and a route on plan does not prove an
+    accessible route. Review “route from the exterior through D06, D05, D04, D02, D03, D01” and confirm
+    the level changes and any exceptions along that route.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 47
+  run: 2
+  prompt_hash: 148523ec4151c45537080de07cfd138f20e63bf023d7c9bac02b0f072e981b67
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +12 more
+  findings: 21
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unknown because
+    the check could not evaluate level changes and listed exceptions, and its note reads {detail}.
+    Review those unevaluated conditions for the route before relying on this result.
+  text: The route to R06 was checked against §206.2.4, but the result is unknown because the check
+    could not evaluate level changes and listed exceptions, and its note reads “route from the exterior
+    through D06, D05, D04”. Review those unevaluated conditions for the route before relying on this
+    result.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 48
+  run: 2
+  prompt_hash: 5e5d9154992e7a32ee5a99c7881305e7ae8f44bda8a2eba77a461125e1cad8aa
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was compared with the minimum in {section}, and the modelled
+    value {measured} sits within uncertainty of {required}, so the outcome is borderline. Measure
+    the opening on site to confirm the clear width, and check whether the alteration-latch-stop exception
+    applies.
+  text: The clear width of D01 was compared with the minimum in §404.2.3, and the modelled value 815
+    mm (32.09 in) ± 5 mm sits within uncertainty of 32 in (812.8 mm), so the outcome is borderline.
+    Measure the opening on site to confirm the clear width, and check whether the alteration-latch-stop
+    exception applies.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 49
+  run: 2
+  prompt_hash: fa88327d8ebb05271706a2632be1b56ce1c6ac5ef1b9a1a713bfbc33bcfbc872
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-swing-wall200
+  - variant-corridor-800-close-sliding-wall200
+  - variant-corridor-800-close-swing-wall200-noswing
+  - +21 more
+  findings: 24
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was compared with the minimum in {section}, and the modelled
+    value {measured} sits within uncertainty of {required}, so the outcome is borderline. Confirm
+    the width by measuring the finished opening, and check whether any of the listed exceptions apply.
+  text: The clear width of D was compared with the minimum in §404.2.3, and the modelled value 815
+    mm (32.09 in) ± 5 mm sits within uncertainty of 32 in (812.8 mm), so the outcome is borderline.
+    Confirm the width by measuring the finished opening, and check whether any of the listed exceptions
+    apply.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 50
+  run: 2
+  prompt_hash: 95c97c58280578b146d0706658960c66e1c14daaee1400f41c2a48fce63dc043
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-double_swing-wall200
+  - variant-corridor-800-close-double_swing-wall200-noswing
+  - variant-bathroom-800-close-double_swing-wall200
+  - +9 more
+  findings: 12
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the result is borderline
+    because the measured value {measured} is close enough to the required {required} that uncertainty
+    covers both outcomes. The check noted {detail}; confirm the measurement on site, and review the
+    exceptions it did not evaluate.
+  text: 'The clear width of D was checked against §404.2.3, and the result is borderline because the
+    measured value 815 mm (32.09 in) ± 5 mm is close enough to the required 32 in (812.8 mm) that
+    uncertainty covers both outcomes. The check noted “clear width as modelled; double-leaf door:
+    one active leaf is judged”; confirm the measurement on site, and review the exceptions it did
+    not evaluate.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 51
+  run: 2
+  prompt_hash: ed0232e652e14c629357018a90864a321518b5484a6106bbf6a32f9e194b10d0
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-narrow-swing-wall200
+  - variant-corridor-800-narrow-sliding-wall200
+  - +24 more
+  findings: 27
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against the minimum in {section}, and the modelled
+    width {measured} falls short of the required {required}. To resolve it, review the modelled opening
+    and consider the exceptions the check did not evaluate, such as {section:404.2.3} for alterations.
+  text: The clear width of D was checked against the minimum in §404.2.3, and the modelled width 700
+    mm (27.56 in) ± 0 mm falls short of the required 32 in (812.8 mm). To resolve it, review the modelled
+    opening and consider the exceptions the check did not evaluate, such as §404.2.3 for alterations.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 52
+  run: 2
+  prompt_hash: 9c6196be5af88865135c7b2be5a989b4a130e45d4cf43ae5e7274906078b338f
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against the minimum in {section}, and the modelled
+    width of {measured} falls short of the required {required}. The check noted {detail} and did not
+    evaluate the alteration latch-stop exception, so you can review that exception or widen the opening.
+  text: The clear width of D04 was checked against the minimum in §404.2.3, and the modelled width
+    of 710 mm (27.95 in) ± 0 mm falls short of the required 32 in (812.8 mm). The check noted “clear
+    width as modelled” and did not evaluate the alteration latch-stop exception, so you can review
+    that exception or widen the opening.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 53
+  run: 2
+  prompt_hash: 9145524c1a0f9e5766784baaf113e276d55cbab16c39346933093ffc4ee76201
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-swing-wall650
+  - variant-corridor-800-narrow-sliding-wall650
+  - variant-corridor-800-narrow-swing-wall650-noswing
+  - +69 more
+  findings: 72
+  cited:
+  - 404.2.3
+  template: 'The clear width of {element} was checked against {section}, and the modelled opening
+    is deeper than the stated depth, so the larger minimum applies and the measured width {measured}
+    falls short of {required}. The check''s note reads: {detail}. The designer can review the opening
+    depth or width, and may confirm whether any of the listed exceptions apply.'
+  text: 'The clear width of D was checked against §404.2.3, and the modelled opening is deeper than
+    the stated depth, so the larger minimum applies and the measured width 700 mm (27.56 in) ± 0 mm
+    falls short of 36 in (914.4 mm). The check''s note reads: “clear width as modelled; opening deeper
+    than 24 in: larger minimum applies”. The designer can review the opening depth or width, and may
+    confirm whether any of the listed exceptions apply.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 54
+  run: 2
+  prompt_hash: 87e08daf158cdc9239fae015d75a5fd4d38b5138542bf8f4eeca9832491d6d02
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-double_swing-wall200
+  - variant-corridor-800-narrow-double_swing-wall200-noswing
+  - variant-bathroom-800-narrow-double_swing-wall200
+  - +9 more
+  findings: 12
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the modelled width of
+    {measured} falls short of the required {required}. To proceed, review {detail} and consider the
+    exceptions the check did not evaluate.
+  text: 'The clear width of D was checked against §404.2.3, and the modelled width of 700 mm (27.56
+    in) ± 0 mm falls short of the required 32 in (812.8 mm). To proceed, review “clear width as modelled;
+    double-leaf door: one active leaf is judged” and consider the exceptions the check did not evaluate.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 55
+  run: 2
+  prompt_hash: 9928a5337b57ac18c376edf1a350ff81cd4559a06bd4ef39082d3399120e8c73
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-double_swing-wall650
+  - variant-corridor-800-narrow-double_swing-wall650-noswing
+  - variant-corridor-800-close-double_swing-wall650
+  - +33 more
+  findings: 36
+  cited:
+  - 404.2.3
+  template: '{element} was checked against the clear width requirement in {section}, and the measured
+    value {measured} falls short of the required {required}. The check''s note reads {detail}; the
+    designer can review the door''s modelled clear width and the listed exceptions before revising
+    the design.'
+  text: 'D was checked against the clear width requirement in §404.2.3, and the measured value 700
+    mm (27.56 in) ± 0 mm falls short of the required 36 in (914.4 mm). The check''s note reads “clear
+    width as modelled; opening deeper than 24 in: larger minimum applies; double-leaf door: one active
+    leaf is judged”; the designer can review the door''s modelled clear width and the listed exceptions
+    before revising the design.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 56
+  run: 2
+  prompt_hash: c1e2269f3025f3cfed552348386242fd3393fbaa50e17be014b8f71e5099c9c2
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +42 more
+  findings: 55
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is unknown
+    because {detail}. You can supply the missing measurement or deduction setting and re-run the check,
+    and review the exceptions it did not evaluate.
+  text: The clear width of D was checked against §404.2.3, but the result is unknown because “clear
+    width not measured and no deduction configured for 'swing'”. You can supply the missing measurement
+    or deduction setting and re-run the check, and review the exceptions it did not evaluate.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 57
+  run: 2
+  prompt_hash: b43b929f9464ea9471d876bd220004b8e4f224e1d1e6734510131b5870af908e
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - variant-corridor-800-none-double_swing-wall200
+  - variant-corridor-800-none-double_swing-wall650
+  - variant-corridor-800-none-double_swing-wall200-noswing
+  - +21 more
+  findings: 24
+  cited:
+  - 404.2.3
+  template: The clear width of {element} could not be settled under {section} because the width was
+    not measured and no deduction is configured for the door type. Check the measurement and deduction
+    settings, then run the check again.
+  text: The clear width of D could not be settled under §404.2.3 because the width was not measured
+    and no deduction is configured for the door type. Check the measurement and deduction settings,
+    then run the check again.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 58
+  run: 2
+  prompt_hash: 7b3ebbb4dc1805cabdedf2a877ada815b1e438905a2405dfa6da4d5a71eabb11
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +17 more
+  findings: 93
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is unknown
+    because {detail}. You can supply the missing measurement or configure the swing deduction, then
+    rerun the check.
+  text: The clear width of D01 was checked against §404.2.3, but the result is unknown because “clear
+    width not measured and no deduction configured for 'swing'”. You can supply the missing measurement
+    or configure the swing deduction, then rerun the check.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 59
+  run: 2
+  prompt_hash: 33206dd070aba1d837192879077101b6827325098c797e4d4e11ebe6ef2013dd
+  rule: ada2010.door-maneuvering-clearance
+  verdict: fail
+  plans:
+  - wide
+  - narrow
+  - sample-office
+  - +53 more
+  findings: 56
+  cited:
+  - 404.2.4.1
+  template: '{section} requires clear floor space in front of {element} and beside the latch on the
+    pull side, and the front-approach check found the space short. The check''s note reads {detail};
+    the designer can review the pull-side layout or check whether another approach applies.'
+  text: §404.2.4.1 requires clear floor space in front of D and beside the latch on the pull side,
+    and the front-approach check found the space short. The check's note reads “front approach assumed;
+    short on pull-side depth 1001 mm, pull-side latch clearance 0 mm”; the designer can review the
+    pull-side layout or check whether another approach applies.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 60
+  run: 2
+  prompt_hash: a9aded64ce6264e51603795dfc148930d214cebd85ec815eeb512dfe08bed510
+  rule: ada2010.door-maneuvering-clearance
+  verdict: fail
+  plans:
+  - synthetic-2
+  - synthetic-8
+  - synthetic-9
+  - +5 more
+  findings: 12
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance at {element} was checked against {section}, and the pull-side
+    depth and latch clearance came out short of {required}. The designer can review {detail} and consider
+    whether a side approach or an exception applies.
+  text: The front-approach clearance at D01 was checked against §404.2.4.1, and the pull-side depth
+    and latch clearance came out short of pull 60 in deep + 18 in beyond latch; push 48 in deep. The
+    designer can review “front approach assumed; short on pull-side depth 362 mm, pull-side latch
+    clearance 362 mm” and consider whether a side approach or an exception applies.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 61
+  run: 2
+  prompt_hash: 182dfabb7bb1107603ac4af8d426c08a4ca33c8365f79ccafb88a1124428a694
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200-noswing
+  - variant-corridor-800-none-swing-wall650-noswing
+  - +94 more
+  findings: 97
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance for {element} was checked under {section}, but the result
+    is unknown because the hinge side or swing direction is missing ({detail}). Confirm the hinge
+    side and swing direction so the correct approach row can be applied.
+  text: The front-approach clearance for D was checked under §404.2.4.1, but the result is unknown
+    because the hinge side or swing direction is missing (“hinge side or swing direction not known”).
+    Confirm the hinge side and swing direction so the correct approach row can be applied.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 62
+  run: 2
+  prompt_hash: 71bc59195409f02a8547ff25d8b0ed44ab9d32f957c217bf349aa7424f24afd4
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - sample-office
+  - synthetic-0
+  - synthetic-1
+  - +20 more
+  findings: 102
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance for {element} was checked under {section}, but the result
+    stays open because the check can only prove a failure and found none. Review {detail} and confirm
+    the approach direction and hardware before relying on this.
+  text: The front-approach clearance for D01 was checked under §404.2.4.1, but the result stays open
+    because the check can only prove a failure and found none. Review “check can only prove fail only;
+    front approach assumed; clear of walls and modelled fixtures” and confirm the approach direction
+    and hardware before relying on this.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 63
+  run: 2
+  prompt_hash: 8060927e1b767b3399aff28dcf3c22dff4c0532233c39cd36725d5da35465616
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - variant-corridor-1525-none-swing-wall200
+  - variant-corridor-1525-none-double_swing-wall200
+  - variant-corridor-1525-narrow-swing-wall200
+  - +65 more
+  findings: 77
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance for {element} was checked under {section}, but the check
+    can only prove a failure and found none, so the result stays open. {detail} Review the plan for
+    the exceptions the check did not evaluate, such as hardware or approach direction.
+  text: The front-approach clearance for D was checked under §404.2.4.1, but the check can only prove
+    a failure and found none, so the result stays open. “check can only prove fail only; front approach
+    assumed; clear of walls and modelled fixtures” Review the plan for the exceptions the check did
+    not evaluate, such as hardware or approach direction.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 64
+  run: 2
+  prompt_hash: 8a5c619fb3ec2f80bd118aec39f9d73735e1d0d3e4ea985a90a9d0f6343be921
+  rule: ada2010.toilet-room-turning-space
+  verdict: fail
+  plans:
+  - variant-bathroom-800-none-swing-wall200
+  - variant-bathroom-800-none-swing-wall650
+  - variant-bathroom-800-none-double_swing-wall200
+  - +45 more
+  findings: 48
+  cited:
+  - 603.2.1
+  template: The turning space in {element} was checked against {section}, and the result came out
+    as it did because the modelled layout leaves too little clear space. The designer can review {detail}
+    and adjust the room layout or fixtures to provide the required turning space.
+  text: The turning space in C was checked against §603.2.1, and the result came out as it did because
+    the modelled layout leaves too little clear space. The designer can review “largest circle 800
+    mm; T-shape fail; no fixtures modelled” and adjust the room layout or fixtures to provide the
+    required turning space.
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 65
+  run: 2
+  prompt_hash: c6d57764580512e53bf52d83fd1af89cec8f23b3abdcefe7b22726c7da29413a
+  rule: ada2010.toilet-room-turning-space
+  verdict: unknown
+  plans:
+  - sample-office
+  - variant-bathroom-2000-none-swing-wall200
+  - variant-bathroom-2000-none-swing-wall650
+  - +59 more
+  findings: 68
+  cited:
+  - 603.2.1
+  template: The turning space for {element} was checked against {section}, but the result stays open
+    because the check can only prove a failure and found none. Review {detail} and confirm the missing
+    inputs, then consider the unevaluated exceptions before deciding what to change.
+  text: The turning space for R02 was checked against §603.2.1, but the result stays open because
+    the check can only prove a failure and found none. Review “check can only prove fail only; largest
+    circle 3100 mm; T-shape pass; fits as a circle; no fixtures modelled” and confirm the missing
+    inputs, then consider the unevaluated exceptions before deciding what to change.
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 66
+  run: 2
+  prompt_hash: 6b5cafa230a1e09fef0c9cfb7304e86f4ce271c1756de6f250e7924567f142a8
+  rule: ada2010.toilet-room-turning-space
+  verdict: unknown
+  plans:
+  - variant-bathroom-1525-none-swing-wall200
+  - variant-bathroom-1525-none-swing-wall650
+  - variant-bathroom-1525-none-double_swing-wall200
+  - +45 more
+  findings: 48
+  cited:
+  - 603.2.1
+  template: The turning space inside {element} was checked against {section}, but the result stays
+    open because the check can only prove a failure and found none. {detail} The designer can model
+    the fixtures in section so knee-and-toe clearance can be credited, and confirm whether a scoping
+    exception applies.
+  text: The turning space inside C was checked against §603.2.1, but the result stays open because
+    the check can only prove a failure and found none. “check can only prove fail only; largest circle
+    1525 mm; T-shape borderline; fits as a circle; no fixtures modelled” The designer can model the
+    fixtures in section so knee-and-toe clearance can be credited, and confirm whether a scoping exception
+    applies.
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 67
+  run: 2
+  prompt_hash: c8967c6a66a928cdc56a4331c20e09cbf6154f65cb25c2371a0d8a7c593dc7c4
+  rule: ada2010.walking-surface-clear-width
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +48 more
+  findings: 51
+  cited:
+  - 403.5.1
+  template: The clear width of {element} was checked against {section}, and the narrow run in {detail}
+    falls short of {required}. To resolve it, review the turns-and-passing exceptions the check did
+    not evaluate, or widen the narrow run.
+  text: The clear width of C was checked against §403.5.1, and the narrow run in “event-exact transverse
+    width profile; narrow run 5000 mm” falls short of 36 in (914.4 mm). To resolve it, review the
+    turns-and-passing exceptions the check did not evaluate, or widen the narrow run.
+  sources:
+    403.5.1:
+    - 'paraphrase: A walking surface on an accessible route needs a minimum clear width, with a short
+      narrower stretch allowed.'
+    - 'requirement: the clear width of walking surfaces shall be 36 inches (915 mm) minimum.'
+    - 'exception: The width may drop to a smaller value for a short length, if the narrow stretches
+      are far enough apart. Source text: The clear width shall be permitted to be reduced to 32 inches
+      (815 mm) minimum for a length of 24 inches (610 mm) maximum provided that reduced width segments
+      are separated by segments that are 48 inches (1220 mm) long minimum and 36 inches (915 mm) wide
+      minimum.'
+    - 'exception: Sections 403.5.2 and 403.5.3 set other widths at 180-degree turns and require passing
+      spaces on long narrow routes. The tool does not check them. Source text: Except as provided
+      in 403.5.2 and 403.5.3'
+  label: null
+  note: null
+- id: 68
+  run: 3
+  prompt_hash: 29e6fbbdf101aaab5769c9b156deeb235695cee4d9481c4129ad4ea25e74488f
+  rule: ada2010.accessible-route
+  verdict: borderline
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked under {section}, and the result depends on other elements
+    that still need measuring or confirming. The check's note reads {detail}; confirm those elements,
+    and check the level changes and listed exceptions the check did not evaluate.
+  text: The route to R07 was checked under §206.2.4, and the result depends on other elements that
+    still need measuring or confirming. The check's note reads “route from the exterior through D08,
+    D01”; confirm those elements, and check the level changes and listed exceptions the check did
+    not evaluate.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 69
+  run: 3
+  prompt_hash: 5087cdc2ca368d7d874e0fe5124cd73cc9b7c0de88d6517832522f8161e50ec1
+  rule: ada2010.accessible-route
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-swing-wall200
+  - variant-corridor-800-close-double_swing-wall200
+  - variant-corridor-800-close-sliding-wall200
+  - +33 more
+  findings: 36
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked under {section}, and the result depends
+    on other elements rather than this room alone, so it stays borderline until those are confirmed.
+    The check's note reads {detail}; confirm the route elements it names, and note that level changes
+    and listed exceptions were not evaluated.
+  text: The route from the exterior to C was checked under §206.2.4, and the result depends on other
+    elements rather than this room alone, so it stays borderline until those are confirmed. The check's
+    note reads “route from the exterior through D”; confirm the route elements it names, and note
+    that level changes and listed exceptions were not evaluated.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 70
+  run: 3
+  prompt_hash: 8a1ff85fbd24046052ffceb9a2a07a15e4047f2db8cb144cce62dad0b816b5b9
+  rule: ada2010.accessible-route
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-narrow-swing-wall200
+  - variant-corridor-800-narrow-swing-wall650
+  - +144 more
+  findings: 147
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, and the result came out as it did
+    because {detail}. The designer can review the route and the listed exceptions the check did not
+    evaluate.
+  text: The route to C was checked against §206.2.4, and the result came out as it did because “no
+    route from the exterior through doors that could comply”. The designer can review the route and
+    the listed exceptions the check did not evaluate.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 71
+  run: 3
+  prompt_hash: 9b90c116baf2704e76896da3d17148c3a0dd428730baff7b9975a9e8e1902f04
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - wide
+  - sample-office
+  - variant-corridor-800-wide-swing-wall200
+  - +37 more
+  findings: 40
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked against {section}, but the check
+    can only prove a failure and found none, so the result stays open. Review {detail} and confirm
+    the route, including any level changes and listed exceptions, before relying on it.
+  text: The route from the exterior to C was checked against §206.2.4, but the check can only prove
+    a failure and found none, so the result stays open. Review “check can only prove fail only; route
+    from the exterior through D” and confirm the route, including any level changes and listed exceptions,
+    before relying on it.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 72
+  run: 3
+  prompt_hash: d5c84b014c4d896c7d88980c87c4e69858ff434703a70a51ab929c048c6cc0b8
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +90 more
+  findings: 103
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked under {section}, but the result stayed
+    open because the check could not evaluate level changes and listed exceptions. Review {detail}
+    and confirm the route's steps, slopes and thresholds directly.
+  text: The route from the exterior to C was checked under §206.2.4, but the result stayed open because
+    the check could not evaluate level changes and listed exceptions. Review “route from the exterior
+    through D” and confirm the route's steps, slopes and thresholds directly.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 73
+  run: 3
+  prompt_hash: c49ebdf788abe515a42e6d00b91ccf88737f3f67118e80d28edd8ccbf3ec177d
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 6
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked against {section}, but the result
+    stays open because the check can only prove a failure and found none, and it did not evaluate
+    level changes or listed exceptions. To settle it, review {detail} and confirm the route's steps,
+    slopes and thresholds.
+  text: The route from the exterior to R01 was checked against §206.2.4, but the result stays open
+    because the check can only prove a failure and found none, and it did not evaluate level changes
+    or listed exceptions. To settle it, review “check can only prove fail only; route from the exterior
+    through D08, D07” and confirm the route's steps, slopes and thresholds.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 74
+  run: 3
+  prompt_hash: ddb128fae833466b9ce113a05a901df7eec9b57106d86b9ee111854ac227d813
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 6
+  cited:
+  - 206.2.4
+  template: 'The route from the exterior to {element} was checked against {section}, but the result
+    stays open because the check can only prove a failure and found none, and it did not evaluate
+    level-changes or listed-exceptions. The check''s own note reads: {detail}. Review the route on
+    site for steps, slopes and thresholds, and confirm whether any listed exception applies.'
+  text: 'The route from the exterior to R03 was checked against §206.2.4, but the result stays open
+    because the check can only prove a failure and found none, and it did not evaluate level-changes
+    or listed-exceptions. The check''s own note reads: “check can only prove fail only; route from
+    the exterior through D08, D07, D03”. Review the route on site for steps, slopes and thresholds,
+    and confirm whether any listed exception applies.'
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 75
+  run: 3
+  prompt_hash: 31c2e233498f93e49851ec9e26f48f71fb2abc79bef265b00036441f3ee3f26b
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +17 more
+  findings: 39
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unknown because
+    the check did not evaluate level-changes or listed-exceptions, and a route on plan is not proof
+    of an accessible route. The designer can review {detail} and confirm those exceptions directly.
+  text: The route to R02 was checked against §206.2.4, but the result is unknown because the check
+    did not evaluate level-changes or listed-exceptions, and a route on plan is not proof of an accessible
+    route. The designer can review “route from the exterior through D06, D05” and confirm those exceptions
+    directly.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 76
+  run: 3
+  prompt_hash: 058b65b0c9720fe1c09f937f4f94435e860efd36502dcbae02d917462288a28a
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-10
+  findings: 2
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unknown because
+    the check could not evaluate level changes and listed exceptions. Review {detail} and confirm
+    the route's level changes and any exemptions.
+  text: The route to R03 was checked against §206.2.4, but the result is unknown because the check
+    could not evaluate level changes and listed exceptions. Review “route from the exterior through
+    D06, D05, D04, D02, D03” and confirm the route's level changes and any exemptions.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 77
+  run: 3
+  prompt_hash: 99ed913e8ed2524935db51eb408b9b59f1352ccae326b29cdcaa3b23d88a685c
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-6
+  - +5 more
+  findings: 11
+  cited:
+  - 206.2.4
+  template: The route from the exterior to {element} was checked against {section}, but the result
+    stayed open because the check could not evaluate level-changes and listed-exceptions, and a route
+    on plan is not proof of an accessible route. To settle it, review the route noted as {detail}
+    for steps, slopes and thresholds, and confirm whether any listed exception applies.
+  text: The route from the exterior to R04 was checked against §206.2.4, but the result stayed open
+    because the check could not evaluate level-changes and listed-exceptions, and a route on plan
+    is not proof of an accessible route. To settle it, review the route noted as “route from the exterior
+    through D06, D05, D04, D02” for steps, slopes and thresholds, and confirm whether any listed exception
+    applies.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 78
+  run: 3
+  prompt_hash: 2656243683d6e6e49543f105e5cdef4b54719618889a3ad609db623b0542a84d
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  findings: 1
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unknown because
+    the check could not evaluate level changes and listed exceptions, and a route on plan is not proof
+    of an accessible route. Review {detail} and confirm the level changes and any exemptions along
+    that route.
+  text: The route to R05 was checked against §206.2.4, but the result is unknown because the check
+    could not evaluate level changes and listed exceptions, and a route on plan is not proof of an
+    accessible route. Review “route from the exterior through D06, D05, D04, D02, D03, D01” and confirm
+    the level changes and any exemptions along that route.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 79
+  run: 3
+  prompt_hash: 148523ec4151c45537080de07cfd138f20e63bf023d7c9bac02b0f072e981b67
+  rule: ada2010.accessible-route
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +12 more
+  findings: 21
+  cited:
+  - 206.2.4
+  template: The route to {element} was checked against {section}, but the result is unknown because
+    the check could not evaluate level changes and listed exceptions, and a route on plan is not proof
+    of an accessible route. Review {detail} and confirm the level changes and any exceptions along
+    that route.
+  text: The route to R06 was checked against §206.2.4, but the result is unknown because the check
+    could not evaluate level changes and listed exceptions, and a route on plan is not proof of an
+    accessible route. Review “route from the exterior through D06, D05, D04” and confirm the level
+    changes and any exceptions along that route.
+  sources:
+    206.2.4:
+    - 'paraphrase: At least one accessible route must connect accessible entrances with all accessible
+      spaces in the building.'
+    - 'requirement: At least one accessible route shall connect accessible building or facility entrances
+      with all accessible spaces and elements within the building or facility which are otherwise
+      connected by a circulation path unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: Sections 206.2.3 and 206.2.4 list spaces that need no accessible route (for example
+      some mezzanines and raised courtroom stations). Other sections exempt spaces such as machinery
+      rooms. Source text: unless exempted by 206.2.3 Exceptions 1 through 7.'
+    - 'exception: A route on plan is not proof of an accessible route: steps, slopes, and thresholds
+      are not visible on a floor plan.'
+  label: null
+  note: null
+- id: 80
+  run: 3
+  prompt_hash: 5e5d9154992e7a32ee5a99c7881305e7ae8f44bda8a2eba77a461125e1cad8aa
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the modelled value {measured}
+    sits within uncertainty of {required}, so the outcome cannot be settled from the model alone.
+    Confirm the width on site, and note that the alteration latch-stop exception was not evaluated.
+  text: The clear width of D01 was checked against §404.2.3, and the modelled value 815 mm (32.09
+    in) ± 5 mm sits within uncertainty of 32 in (812.8 mm), so the outcome cannot be settled from
+    the model alone. Confirm the width on site, and note that the alteration latch-stop exception
+    was not evaluated.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 81
+  run: 3
+  prompt_hash: fa88327d8ebb05271706a2632be1b56ce1c6ac5ef1b9a1a713bfbc33bcfbc872
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-swing-wall200
+  - variant-corridor-800-close-sliding-wall200
+  - variant-corridor-800-close-swing-wall200-noswing
+  - +21 more
+  findings: 24
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the modelled value {measured}
+    sits within the uncertainty of {required}, so the outcome cannot be settled from the model alone.
+    Confirm the clear width by measuring the built opening, and check whether any of the listed exceptions
+    apply.
+  text: The clear width of D was checked against §404.2.3, and the modelled value 815 mm (32.09 in)
+    ± 5 mm sits within the uncertainty of 32 in (812.8 mm), so the outcome cannot be settled from
+    the model alone. Confirm the clear width by measuring the built opening, and check whether any
+    of the listed exceptions apply.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 82
+  run: 3
+  prompt_hash: 95c97c58280578b146d0706658960c66e1c14daaee1400f41c2a48fce63dc043
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  plans:
+  - variant-corridor-800-close-double_swing-wall200
+  - variant-corridor-800-close-double_swing-wall200-noswing
+  - variant-bathroom-800-close-double_swing-wall200
+  - +9 more
+  findings: 12
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the result is borderline
+    because {measured} sits within uncertainty of {required}. Confirm the measurement on site, noting
+    that {detail}.
+  text: 'The clear width of D was checked against §404.2.3, and the result is borderline because 815
+    mm (32.09 in) ± 5 mm sits within uncertainty of 32 in (812.8 mm). Confirm the measurement on site,
+    noting that “clear width as modelled; double-leaf door: one active leaf is judged”.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 83
+  run: 3
+  prompt_hash: ed0232e652e14c629357018a90864a321518b5484a6106bbf6a32f9e194b10d0
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-narrow-swing-wall200
+  - variant-corridor-800-narrow-sliding-wall200
+  - +24 more
+  findings: 27
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was measured against the minimum in {section}, and the modelled
+    width of {measured} falls short of the required {required}. To resolve this, review {detail} and
+    consider whether any of the listed exceptions apply to this door.
+  text: The clear width of D was measured against the minimum in §404.2.3, and the modelled width
+    of 700 mm (27.56 in) ± 0 mm falls short of the required 32 in (812.8 mm). To resolve this, review
+    “clear width as modelled” and consider whether any of the listed exceptions apply to this door.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 84
+  run: 3
+  prompt_hash: 9c6196be5af88865135c7b2be5a989b4a130e45d4cf43ae5e7274906078b338f
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - sample-office
+  - injection-instructions-clean
+  - injection-instructions-injected
+  findings: 3
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was measured as {measured} against the minimum in {section},
+    and it came out short of {required}. The check did not evaluate the alteration latch-stop exception,
+    so review {detail} and consider whether that exception applies before revising the door.
+  text: The clear width of D04 was measured as 710 mm (27.95 in) ± 0 mm against the minimum in §404.2.3,
+    and it came out short of 32 in (812.8 mm). The check did not evaluate the alteration latch-stop
+    exception, so review “clear width as modelled” and consider whether that exception applies before
+    revising the door.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 85
+  run: 3
+  prompt_hash: 9145524c1a0f9e5766784baaf113e276d55cbab16c39346933093ffc4ee76201
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-swing-wall650
+  - variant-corridor-800-narrow-sliding-wall650
+  - variant-corridor-800-narrow-swing-wall650-noswing
+  - +69 more
+  findings: 72
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the modelled opening is
+    deeper than the stated depth, so the larger minimum applies and the measured width falls short.
+    The designer can review {detail} and adjust the opening or its depth to meet the larger minimum.
+  text: 'The clear width of D was checked against §404.2.3, and the modelled opening is deeper than
+    the stated depth, so the larger minimum applies and the measured width falls short. The designer
+    can review “clear width as modelled; opening deeper than 24 in: larger minimum applies” and adjust
+    the opening or its depth to meet the larger minimum.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 86
+  run: 3
+  prompt_hash: 87e08daf158cdc9239fae015d75a5fd4d38b5138542bf8f4eeca9832491d6d02
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-double_swing-wall200
+  - variant-corridor-800-narrow-double_swing-wall200-noswing
+  - variant-bathroom-800-narrow-double_swing-wall200
+  - +9 more
+  findings: 12
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against the minimum in {section}, and the modelled
+    width of {measured} falls short of {required}. The check's note reads {detail}; review the door's
+    clear width against {section} and consider the exceptions it did not evaluate.
+  text: 'The clear width of D was checked against the minimum in §404.2.3, and the modelled width
+    of 700 mm (27.56 in) ± 0 mm falls short of 32 in (812.8 mm). The check''s note reads “clear width
+    as modelled; double-leaf door: one active leaf is judged”; review the door''s clear width against
+    §404.2.3 and consider the exceptions it did not evaluate.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 87
+  run: 3
+  prompt_hash: 9928a5337b57ac18c376edf1a350ff81cd4559a06bd4ef39082d3399120e8c73
+  rule: ada2010.door-clear-width
+  verdict: fail
+  plans:
+  - variant-corridor-800-narrow-double_swing-wall650
+  - variant-corridor-800-narrow-double_swing-wall650-noswing
+  - variant-corridor-800-close-double_swing-wall650
+  - +33 more
+  findings: 36
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, and the measured value {measured}
+    falls short of the required {required}. To proceed, review {detail} and consider the exceptions
+    the check did not evaluate.
+  text: 'The clear width of D was checked against §404.2.3, and the measured value 700 mm (27.56 in)
+    ± 0 mm falls short of the required 36 in (914.4 mm). To proceed, review “clear width as modelled;
+    opening deeper than 24 in: larger minimum applies; double-leaf door: one active leaf is judged”
+    and consider the exceptions the check did not evaluate.'
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 88
+  run: 3
+  prompt_hash: c1e2269f3025f3cfed552348386242fd3393fbaa50e17be014b8f71e5099c9c2
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +42 more
+  findings: 55
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is unknown
+    because {detail}. You can supply the missing measurement or configure the swing deduction, then
+    rerun the check.
+  text: The clear width of D was checked against §404.2.3, but the result is unknown because “clear
+    width not measured and no deduction configured for 'swing'”. You can supply the missing measurement
+    or configure the swing deduction, then rerun the check.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 89
+  run: 3
+  prompt_hash: b43b929f9464ea9471d876bd220004b8e4f224e1d1e6734510131b5870af908e
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - variant-corridor-800-none-double_swing-wall200
+  - variant-corridor-800-none-double_swing-wall650
+  - variant-corridor-800-none-double_swing-wall200-noswing
+  - +21 more
+  findings: 24
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is unknown
+    because {detail}. You can supply the missing measurement or configure the deduction, then rerun
+    the check.
+  text: The clear width of D was checked against §404.2.3, but the result is unknown because “clear
+    width not measured and no deduction configured for 'double_swing'”. You can supply the missing
+    measurement or configure the deduction, then rerun the check.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 90
+  run: 3
+  prompt_hash: 5beb78b06ab8579c46b5c22b685aac85ca3c3f82a73645f62de1ffc26751596b
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - variant-corridor-800-none-sliding-wall200
+  - variant-corridor-800-none-sliding-wall650
+  - variant-corridor-800-none-sliding-wall200-noswing
+  - +21 more
+  findings: 24
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is unknown
+    because {detail}. You can supply the missing measurement or deduction setting and re-run the check.
+  text: The clear width of D was checked against §404.2.3, but the result is unknown because “clear
+    width not measured and no deduction configured for 'sliding'”. You can supply the missing measurement
+    or deduction setting and re-run the check.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 91
+  run: 3
+  prompt_hash: 7b3ebbb4dc1805cabdedf2a877ada815b1e438905a2405dfa6da4d5a71eabb11
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  plans:
+  - synthetic-0
+  - synthetic-1
+  - synthetic-2
+  - +17 more
+  findings: 93
+  cited:
+  - 404.2.3
+  template: The clear width of {element} was checked against {section}, but the result is unknown
+    because {detail}. You can supply the missing measurement or deduction setting and rerun the check.
+  text: The clear width of D01 was checked against §404.2.3, but the result is unknown because “clear
+    width not measured and no deduction configured for 'swing'”. You can supply the missing measurement
+    or deduction setting and rerun the check.
+  sources:
+    404.2.3:
+    - 'paraphrase: Door openings need a minimum clear width, measured between the face of the open
+      door and the stop.'
+    - 'requirement: Door openings shall provide a clear width of 32 inches (815 mm) minimum.'
+    - 'exception: An opening deeper than a stated depth needs a larger clear width. Source text: Openings
+      more than 24 inches (610 mm) deep shall provide a clear opening of 36 inches (915 mm) minimum.'
+    - 'exception: In alterations, the latch-side stop may project a small amount into the required
+      clear width. Source text: In alterations, a projection of 5/8 inch (16 mm) maximum into the
+      required clear width shall be permitted for the latch side stop.'
+  label: null
+  note: null
+- id: 92
+  run: 3
+  prompt_hash: 33206dd070aba1d837192879077101b6827325098c797e4d4e11ebe6ef2013dd
+  rule: ada2010.door-maneuvering-clearance
+  verdict: fail
+  plans:
+  - wide
+  - narrow
+  - sample-office
+  - +53 more
+  findings: 56
+  cited:
+  - 404.2.4.1
+  template: '{section} requires clear floor space in front of {element} and beside the latch on the
+    pull side, and the front-approach check found the pull-side depth and latch clearance short. The
+    designer can review {detail} and consider whether a side approach or a listed exception applies.'
+  text: §404.2.4.1 requires clear floor space in front of D and beside the latch on the pull side,
+    and the front-approach check found the pull-side depth and latch clearance short. The designer
+    can review “front approach assumed; short on pull-side depth 1001 mm, pull-side latch clearance
+    0 mm” and consider whether a side approach or a listed exception applies.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 93
+  run: 3
+  prompt_hash: a9aded64ce6264e51603795dfc148930d214cebd85ec815eeb512dfe08bed510
+  rule: ada2010.door-maneuvering-clearance
+  verdict: fail
+  plans:
+  - synthetic-2
+  - synthetic-8
+  - synthetic-9
+  - +5 more
+  findings: 12
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance at {element} was checked against {section}, and the pull-side
+    depth and latch clearance fall short of {required}. The designer can review {detail} and consider
+    whether a side approach or a listed exception applies.
+  text: The front-approach clearance at D01 was checked against §404.2.4.1, and the pull-side depth
+    and latch clearance fall short of pull 60 in deep + 18 in beyond latch; push 48 in deep. The designer
+    can review “front approach assumed; short on pull-side depth 362 mm, pull-side latch clearance
+    362 mm” and consider whether a side approach or a listed exception applies.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 94
+  run: 3
+  prompt_hash: 182dfabb7bb1107603ac4af8d426c08a4ca33c8365f79ccafb88a1124428a694
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - missing
+  - variant-corridor-800-none-swing-wall200-noswing
+  - variant-corridor-800-none-swing-wall650-noswing
+  - +94 more
+  findings: 97
+  cited:
+  - 404.2.4.1
+  template: The clearance in front of {element} was checked against {section}, but the result is unknown
+    because the hinge side or swing direction is missing ({detail}). Confirm the hinge side and swing
+    direction on the plan so the correct approach row can be applied.
+  text: The clearance in front of D was checked against §404.2.4.1, but the result is unknown because
+    the hinge side or swing direction is missing (“hinge side or swing direction not known”). Confirm
+    the hinge side and swing direction on the plan so the correct approach row can be applied.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 95
+  run: 3
+  prompt_hash: 71bc59195409f02a8547ff25d8b0ed44ab9d32f957c217bf349aa7424f24afd4
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - sample-office
+  - synthetic-0
+  - synthetic-1
+  - +20 more
+  findings: 102
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance for {element} was checked under {section}, but the check
+    can only prove a failure and found none, so the result stays open. {detail} Review the plan against
+    the closer-and-latch, hospital-patient-room and other-approach exceptions the check did not evaluate.
+  text: The front-approach clearance for D01 was checked under §404.2.4.1, but the check can only
+    prove a failure and found none, so the result stays open. “check can only prove fail only; front
+    approach assumed; clear of walls and modelled fixtures” Review the plan against the closer-and-latch,
+    hospital-patient-room and other-approach exceptions the check did not evaluate.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 96
+  run: 3
+  prompt_hash: 8060927e1b767b3399aff28dcf3c22dff4c0532233c39cd36725d5da35465616
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  plans:
+  - variant-corridor-1525-none-swing-wall200
+  - variant-corridor-1525-none-double_swing-wall200
+  - variant-corridor-1525-narrow-swing-wall200
+  - +65 more
+  findings: 77
+  cited:
+  - 404.2.4.1
+  template: The front-approach clearance for {element} was checked under {section}, but the check
+    can only prove a failure and found none, so the result stays open. The check's note reads {detail};
+    the designer can confirm the approach direction and hardware to settle it.
+  text: The front-approach clearance for D was checked under §404.2.4.1, but the check can only prove
+    a failure and found none, so the result stays open. The check's note reads “check can only prove
+    fail only; front approach assumed; clear of walls and modelled fixtures”; the designer can confirm
+    the approach direction and hardware to settle it.
+  sources:
+    404.2.4.1:
+    - 'paraphrase: A swinging door needs clear floor space in front of it, and beside the latch on
+      the pull side. The tool checks the front-approach row of the table.'
+    - 'requirement: | From Front | Pull | 60 inches (1525 mm) | 18 inches (455 mm)'
+    - 'requirement: | From Front | Push | 48 inches (1220 mm) | 0 inches (0 mm) (Add 12 inches (305
+      mm) if closer and latch are provided.)'
+    - 'exception: On the push side, extra latch-side clearance is needed when the door has both a
+      closer and a latch. A plan does not show hardware. Source text: | From Front | Push | 48 inches
+      (1220 mm) | 0 inches (0 mm) (Add 12 inches (305 mm) if closer and latch are provided.)'
+    - 'exception: The table has different clearances for approach from the hinge side or the latch
+      side. The tool assumes a front approach, so a door that fails here may comply for a side approach.'
+  label: null
+  note: null
+- id: 97
+  run: 3
+  prompt_hash: 8a5c619fb3ec2f80bd118aec39f9d73735e1d0d3e4ea985a90a9d0f6343be921
+  rule: ada2010.toilet-room-turning-space
+  verdict: fail
+  plans:
+  - variant-bathroom-800-none-swing-wall200
+  - variant-bathroom-800-none-swing-wall650
+  - variant-bathroom-800-none-double_swing-wall200
+  - +45 more
+  findings: 48
+  cited:
+  - 603.2.1
+  template: The turning space in {element} was checked against {section}, and the largest circle found
+    was smaller than {required}, so the result came out as it did. To proceed, the designer can review
+    {detail} and consider the knee-and-toe-clearance and scoping exceptions that the check did not
+    evaluate.
+  text: The turning space in C was checked against §603.2.1, and the largest circle found was smaller
+    than circle 60 in or T in 60 in square (1524 mm), so the result came out as it did. To proceed,
+    the designer can review “largest circle 800 mm; T-shape fail; no fixtures modelled” and consider
+    the knee-and-toe-clearance and scoping exceptions that the check did not evaluate.
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 98
+  run: 3
+  prompt_hash: c6d57764580512e53bf52d83fd1af89cec8f23b3abdcefe7b22726c7da29413a
+  rule: ada2010.toilet-room-turning-space
+  verdict: unknown
+  plans:
+  - sample-office
+  - variant-bathroom-2000-none-swing-wall200
+  - variant-bathroom-2000-none-swing-wall650
+  - +59 more
+  findings: 68
+  cited:
+  - 603.2.1
+  template: 'The check looked for a turning space in {element} under {section}, but could not settle
+    the result because no fixtures were modelled. The detail: {detail}. You can check the turning
+    space against the fixtures shown in the room.'
+  text: 'The check looked for a turning space in R02 under §603.2.1, but could not settle the result
+    because no fixtures were modelled. The detail: “check can only prove fail only; largest circle
+    3100 mm; T-shape pass; fits as a circle; no fixtures modelled”. You can check the turning space
+    against the fixtures shown in the room.'
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 99
+  run: 3
+  prompt_hash: 6b5cafa230a1e09fef0c9cfb7304e86f4ce271c1756de6f250e7924567f142a8
+  rule: ada2010.toilet-room-turning-space
+  verdict: unknown
+  plans:
+  - variant-bathroom-1525-none-swing-wall200
+  - variant-bathroom-1525-none-swing-wall650
+  - variant-bathroom-1525-none-double_swing-wall200
+  - +45 more
+  findings: 48
+  cited:
+  - 603.2.1
+  template: The turning space inside {element} was checked against {section}, but the result stays
+    open because the check can only prove a failure and found none. {detail} You can model the fixtures
+    in section so knee-and-toe clearance can be credited, and confirm whether a scoping exception
+    applies.
+  text: The turning space inside C was checked against §603.2.1, but the result stays open because
+    the check can only prove a failure and found none. “check can only prove fail only; largest circle
+    1525 mm; T-shape borderline; fits as a circle; no fixtures modelled” You can model the fixtures
+    in section so knee-and-toe clearance can be credited, and confirm whether a scoping exception
+    applies.
+  sources:
+    603.2.1:
+    - 'paraphrase: A toilet or bathing room needs a turning space inside the room: a circle, or a
+      T-shaped space.'
+    - 'requirement: Turning space complying with 304 shall be provided within the room.'
+  label: null
+  note: null
+- id: 100
+  run: 3
+  prompt_hash: c8967c6a66a928cdc56a4331c20e09cbf6154f65cb25c2371a0d8a7c593dc7c4
+  rule: ada2010.walking-surface-clear-width
+  verdict: fail
+  plans:
+  - narrow
+  - variant-corridor-800-none-swing-wall200
+  - variant-corridor-800-none-swing-wall650
+  - +48 more
+  findings: 51
+  cited:
+  - 403.5.1
+  template: The clear width of {element} was checked against {section}, and the narrow run in {detail}
+    falls short of {required} by more than the measurement uncertainty. To resolve it, widen that
+    run to at least {required}, or use the turns-and-passing exceptions the check did not evaluate.
+  text: The clear width of C was checked against §403.5.1, and the narrow run in “event-exact transverse
+    width profile; narrow run 5000 mm” falls short of 36 in (914.4 mm) by more than the measurement
+    uncertainty. To resolve it, widen that run to at least 36 in (914.4 mm), or use the turns-and-passing
+    exceptions the check did not evaluate.
+  sources:
+    403.5.1:
+    - 'paraphrase: A walking surface on an accessible route needs a minimum clear width, with a short
+      narrower stretch allowed.'
+    - 'requirement: the clear width of walking surfaces shall be 36 inches (915 mm) minimum.'
+    - 'exception: The width may drop to a smaller value for a short length, if the narrow stretches
+      are far enough apart. Source text: The clear width shall be permitted to be reduced to 32 inches
+      (815 mm) minimum for a length of 24 inches (610 mm) maximum provided that reduced width segments
+      are separated by segments that are 48 inches (1220 mm) long minimum and 36 inches (915 mm) wide
+      minimum.'
+    - 'exception: Sections 403.5.2 and 403.5.3 set other widths at 180-degree turns and require passing
+      spaces on long narrow routes. The tool does not check them. Source text: Except as provided
+      in 403.5.2 and 403.5.3'
   label: null
   note: null

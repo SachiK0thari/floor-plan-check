@@ -1,4 +1,4 @@
-.PHONY: setup test lint format train-seg ingest-code validate-rules budget baselines eval api up web demo
+.PHONY: setup test lint format train-seg ingest-code validate-rules budget baselines eval eval-explain eval-explain-report api up web demo
 
 # Targets that belong to a later milestone fail loudly instead of doing nothing.
 define NOT_YET
@@ -44,6 +44,16 @@ ingest-code baselines:
 
 eval:
 	uv run python -m plancheck.evaluation.validate
+	uv run python -m plancheck.evaluation.explain_eval check
+
+# Calls the language model (OPENROUTER_API_KEY), then rewrites eval/rag/citation_labels.yaml,
+# keeping every label already given, and eval/reports/explanation-eval.md.
+eval-explain:
+	uv run python -m plancheck.evaluation.explain_eval run --runs 3
+
+# Recomputes the explanation report from the saved runs and the labels. No model call.
+eval-explain-report:
+	uv run python -m plancheck.evaluation.explain_eval report
 
 demo:
 	uv run python -m plancheck.demo

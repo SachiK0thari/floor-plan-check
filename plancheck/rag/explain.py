@@ -268,6 +268,26 @@ def build_message(model: BuildingModel, finding: Finding, rule: Rule, sources: l
     return "\n".join(lines)
 
 
+def prompt_hash(model_id: str, message: str) -> str:
+    """Identifies one distinct request: the model, the system prompt and the message."""
+    return hashlib.sha256("\n".join((model_id, SYSTEM_PROMPT, message)).encode("utf-8")).hexdigest()
+
+
+def wanted_findings(
+    artifact: CheckRunArtifact, verdicts: Iterable[str] | None = None
+) -> list[tuple[int, Finding, Rule]]:
+    """The findings an explanation pass covers, numbered as in reports, with their rules."""
+    config = load_config("explain")
+    wanted = {Verdict(v) for v in (verdicts if verdicts is not None else config["verdicts"])}
+    rules = {snapshot.rule.id: snapshot.rule for snapshot in artifact.rules}
+    selected = []
+    for number, finding in enumerate(artifact.report.findings, start=1):
+        rule = rules.get(finding.rule_id)
+        if finding.verdict in wanted and finding.verdict in VERDICT_MEANING and rule is not None:
+            selected.append((number, finding, rule))
+    return selected
+
+
 def validate(
     template: str, slots: Iterable[str], fetched_sections: Iterable[str], verdict: Verdict
 ) -> RejectionReason | None:
@@ -380,24 +400,17 @@ def explain_run(
     """
     config = load_config("explain")
     attempts = max_attempts if max_attempts is not None else int(config["max_attempts"])
-    wanted = {Verdict(v) for v in (verdicts if verdicts is not None else config["verdicts"])}
-    rules = {snapshot.rule.id: snapshot.rule for snapshot in artifact.rules}
     jobs: dict[str, _Job] = {}
     planned: list[tuple[int, Finding, Rule, dict[str, str], str]] = []
-    for number, finding in enumerate(artifact.report.findings, start=1):
-        rule = rules.get(finding.rule_id)
-        if finding.verdict not in wanted or finding.verdict not in VERDICT_MEANING or rule is None:
-            continue
+    for number, finding, rule in wanted_findings(artifact, verdicts):
         sources = rule_sources(rule)
         values = slot_values(finding, rule)
         message = build_message(artifact.model, finding, rule, sources)
-        prompt_hash = hashlib.sha256(
-            "\n".join((client.model_id, SYSTEM_PROMPT, message)).encode("utf-8")
-        ).hexdigest()
+        digest = prompt_hash(client.model_id, message)
         jobs.setdefault(
-            prompt_hash,
+            digest,
             _Job(
-                prompt_hash=prompt_hash,
+                prompt_hash=digest,
                 message=message,
                 slots=list(values),
                 fetched=sorted({source.section for source in sources}),
@@ -405,7 +418,7 @@ def explain_run(
                 rule_id=rule.id,
             ),
         )
-        planned.append((number, finding, rule, values, prompt_hash))
+        planned.append((number, finding, rule, values, digest))
 
     with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
         results = list(pool.map(lambda job: _write(client, job, attempts), jobs.values()))
@@ -420,8 +433,8 @@ def explain_run(
 
     explanations: list[Explanation] = []
     unexplained: list[int] = []
-    for number, finding, rule, values, prompt_hash in planned:
-        template = templates[prompt_hash]
+    for number, finding, rule, values, digest in planned:
+        template = templates[digest]
         if template is None:
             unexplained.append(number)
             continue
@@ -434,9 +447,9 @@ def explain_run(
                 text=fill(template, values),
                 template=template,
                 cited_sections=cited(template, rule),
-                fetched_sections=jobs[prompt_hash].fetched,
+                fetched_sections=jobs[digest].fetched,
                 model_id=client.model_id,
-                prompt_hash=prompt_hash,
+                prompt_hash=digest,
             )
         )
     return ExplanationRun(
