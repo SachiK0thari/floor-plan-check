@@ -190,3 +190,16 @@ def test_kaggle_push_builds_script_with_driver(tmp_path: Path) -> None:
     assert code.count('if __name__ == "__main__":') == 1
     assert "cubicasa_masks.tar" in code
     compile(code, "cubicasa_prep.py", "exec")
+
+
+def test_kaggle_push_resume_job_reads_the_owners_checkpoint(tmp_path: Path) -> None:
+    from training import kaggle_push
+
+    meta_path = kaggle_push.build(kaggle_push.JOBS["resume"], "someone", tmp_path)
+    meta = json.loads(meta_path.read_text())
+    assert meta["dataset_sources"] == ["someone/plancheck-seg-checkpoint"]
+    assert meta["kernel_sources"] == ["someone/plancheck-cubicasa-prep"]
+    assert meta["enable_gpu"] is True
+    code = (tmp_path / "train_seg.py").read_text()
+    assert '"--resume"' in code
+    compile(code, "train_seg.py", "exec")

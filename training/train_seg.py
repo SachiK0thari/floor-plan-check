@@ -404,6 +404,32 @@ def save_reliability(path: Path, calib: dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 
 
+def memory_gb() -> dict[str, float]:
+    """Host memory available and this process's resident size, where Linux reports them."""
+    out: dict[str, float] = {}
+    for path, key, name in (
+        ("/proc/meminfo", "MemAvailable:", "available_gb"),
+        ("/proc/self/status", "VmRSS:", "rss_gb"),
+    ):
+        try:
+            for line in Path(path).read_text().splitlines():
+                if line.startswith(key):
+                    out[name] = round(int(line.split()[1]) / 2**20, 2)  # kB to GiB
+        except OSError:
+            pass
+    return out
+
+
+def fast_forward(sched: torch.optim.lr_scheduler.LRScheduler, steps: int) -> None:
+    """Advance a schedule without optimizer steps (resuming from weights only)."""
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)  # "scheduler.step() before optimizer.step()"
+        for _ in range(steps):
+            sched.step()
+
+
 def kaggle_masks() -> Path:
     """Extract the prep kernel's archive to scratch space and return the masks folder."""
     archives = sorted(Path("/kaggle/input").rglob("cubicasa_masks.tar"))
@@ -435,6 +461,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=0, help="plans per split (smoke test)")
     parser.add_argument("--no-pretrained", action="store_true")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--resume",
+        type=Path,
+        help="continue from a model_last.pt; run with the same schedule arguments as before",
+    )
     args = parser.parse_args(argv)
 
     start = time.time()
@@ -472,6 +503,9 @@ def main(argv: list[str] | None = None) -> int:
         num_workers=args.workers,
         collate_fn=collate,
         drop_last=True,
+        # Known issue, cause not yet found: the main process grows by about 0.6 GB per epoch
+        # on Kaggle (2 x T4, 4 workers) with or without persistent workers, so a 30 GB host
+        # lasts about 45 epochs. Longer runs are split with --resume.
         persistent_workers=args.workers > 0,
         pin_memory=device.type == "cuda",
     )
@@ -486,9 +520,41 @@ def main(argv: list[str] | None = None) -> int:
     history: list[dict[str, Any]] = []
     best = -1.0
     best_path = args.out / "model_best.pt"
-    epochs_done = 0
+    start_epoch = 1
+    resumed: dict[str, Any] | None = None
+    if args.resume:
+        ckpt = torch.load(args.resume, map_location=device)
+        model.load_state_dict(ckpt["model"])
+        start_epoch = int(ckpt["epoch"]) + 1
+        if "optimizer" in ckpt:
+            opt.load_state_dict(ckpt["optimizer"])
+            sched.load_state_dict(ckpt["scheduler"])
+            scaler.load_state_dict(ckpt["scaler"])
+            if ckpt["scheduler"].get("total_steps") != steps:
+                raise ValueError(
+                    f"the checkpoint's schedule has {ckpt['scheduler'].get('total_steps')} steps "
+                    f"and this run's has {steps}; resume with the original --epochs and --batch"
+                )
+            restored = "weights, optimizer, schedule and loss scaler"
+        else:
+            fast_forward(sched, min(steps, (start_epoch - 1) * len(loader)))
+            restored = "weights only: fresh optimizer moments, schedule advanced to the epoch"
+        best = ckpt.get("best")
+        if best is None:  # older checkpoints do not record it; measure the loaded weights
+            best = evaluate(model, args.masks, splits["val"], tables, device)["mean_iou_foreground"]
+        torch.save(
+            {"model": model.state_dict(), "epoch": start_epoch - 1, "classes": CLASSES}, best_path
+        )
+        resumed = {
+            "from": str(args.resume),
+            "after_epoch": start_epoch - 1,
+            "restored": restored,
+            "val_mean_iou_foreground": best,
+        }
+        print(json.dumps({"resumed": resumed, "memory": memory_gb()}), flush=True)
+    epochs_done = start_epoch - 1
     stopped_early = False
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(start_epoch, args.epochs + 1):
         net.train()
         t0, total_loss, n = time.time(), 0.0, 0
         for x, y in loader:
@@ -504,13 +570,14 @@ def main(argv: list[str] | None = None) -> int:
             scaler.step(opt)
             scaler.update()
             sched.step()
-            total_loss += float(loss)
+            total_loss += float(loss.detach())
             n += 1
         epochs_done = epoch
         record: dict[str, Any] = {
             "epoch": epoch,
             "loss": total_loss / max(n, 1),
             "seconds": time.time() - t0,
+            "memory": memory_gb(),
         }
         last = epoch == args.epochs or time.time() - start > budget
         if epoch % args.val_every == 0 or last:
@@ -525,7 +592,17 @@ def main(argv: list[str] | None = None) -> int:
                 record["best"] = True
         history.append(record)
         print(json.dumps(record), flush=True)
-        torch.save({"model": model.state_dict(), "epoch": epoch}, args.out / "model_last.pt")
+        torch.save(
+            {
+                "model": model.state_dict(),
+                "epoch": epoch,
+                "best": best,
+                "optimizer": opt.state_dict(),
+                "scheduler": sched.state_dict(),
+                "scaler": scaler.state_dict(),
+            },
+            args.out / "model_last.pt",
+        )
         if time.time() - start > budget and epoch < args.epochs:
             stopped_early = True
             print(f"time budget reached after epoch {epoch}", flush=True)
@@ -567,6 +644,7 @@ def main(argv: list[str] | None = None) -> int:
         "best_epoch": torch.load(best_path, map_location="cpu")["epoch"],
         "epochs_done": epochs_done,
         "stopped_early": stopped_early,
+        "resumed": resumed,
         "history": history,
         "config": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
         "evaluation_resolution": "stored masks: long side at most the prep --max-side",

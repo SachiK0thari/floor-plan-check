@@ -4,6 +4,7 @@ Usage::
 
     python -m training.kaggle_push prep --owner <kaggle-user>
     python -m training.kaggle_push train --owner <kaggle-user>
+    python -m training.kaggle_push resume --owner <kaggle-user>   # after a stopped train run
 
 Each job is one module from this folder plus a short driver that supplies the Kaggle paths.
 The module file is uploaded unchanged apart from its final ``__main__`` block, which is
@@ -48,6 +49,15 @@ TRAIN_DRIVER = """if __name__ == "__main__":
     sys.exit(main(["--kaggle"]))
 """
 
+# Found before the masks are extracted, so a missing checkpoint fails in seconds.
+RESUME_DRIVER = """if __name__ == "__main__":
+    _found = sorted(Path("/kaggle/input").rglob("model_last.pt"))
+    if not _found:
+        raise FileNotFoundError("model_last.pt not found under /kaggle/input")
+    print("resuming from", _found[0], flush=True)
+    sys.exit(main(["--kaggle", "--resume", str(_found[0])]))
+"""
+
 
 @dataclass(frozen=True)
 class Job:
@@ -75,6 +85,18 @@ JOBS = {
         gpu=True,
         internet=True,  # ImageNet encoder weights come from download.pytorch.org
     ),
+    # Continues a stopped train run, then evaluates. Kaggle will not attach the output of a
+    # run that ended in an error, so the run's model_last.pt is first uploaded as a private
+    # dataset (see README.md).
+    "resume": Job(
+        slug="plancheck-seg-resume",
+        module="train_seg.py",
+        driver=RESUME_DRIVER,
+        datasets=["{owner}/plancheck-seg-checkpoint"],
+        kernels=["plancheck-cubicasa-prep"],
+        gpu=True,
+        internet=True,
+    ),
 }
 
 
@@ -95,7 +117,7 @@ def build(job: Job, owner: str, folder: Path) -> Path:
         "enable_gpu": job.gpu,
         "enable_tpu": False,
         "enable_internet": job.internet,
-        "dataset_sources": job.datasets,
+        "dataset_sources": [d.format(owner=owner) for d in job.datasets],
         "kernel_sources": [f"{owner}/{k}" for k in job.kernels],
         "competition_sources": [],
         "model_sources": [],

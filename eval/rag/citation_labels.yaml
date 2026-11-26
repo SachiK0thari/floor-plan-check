@@ -1,0 +1,242 @@
+labelled_by: null
+labelled_on: null
+items:
+- id: 1
+  plan: missing
+  finding: 1
+  rule: ada2010.accessible-route
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: d5c84b014c4d896c7d88980c87c4e69858ff434703a70a51ab929c048c6cc0b8
+  cited:
+  - 206.2.4
+  text: The route from the exterior to C was checked against §206.2.4, but the result is unsettled
+    because the check could not evaluate level changes and listed exceptions, and a route on
+    plan does not show steps, slopes or thresholds. Review “route from the exterior through
+    D” and confirm the route conditions the check left out.
+  label: null
+  note: null
+- id: 2
+  plan: missing
+  finding: 2
+  rule: ada2010.door-clear-width
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: c1e2269f3025f3cfed552348386242fd3393fbaa50e17be014b8f71e5099c9c2
+  cited:
+  - 404.2.3
+  text: The clear width of D was checked against §404.2.3, but the result is unknown because
+    “clear width not measured and no deduction configured for 'swing'”. You can supply the missing
+    measurement or configure the swing deduction, then rerun the check.
+  label: null
+  note: null
+- id: 3
+  plan: missing
+  finding: 3
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 182dfabb7bb1107603ac4af8d426c08a4ca33c8365f79ccafb88a1124428a694
+  cited:
+  - 404.2.4.1
+  text: The front-approach clearance for D was checked under §404.2.4.1, but the result is unknown
+    because the hinge side or swing direction is missing (“hinge side or swing direction not
+    known”). Please supply that information so the check can settle.
+  label: null
+  note: null
+- id: 4
+  plan: narrow
+  finding: 1
+  rule: ada2010.accessible-route
+  verdict: fail
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 8a1ff85fbd24046052ffceb9a2a07a15e4047f2db8cb144cce62dad0b816b5b9
+  cited:
+  - 206.2.4
+  text: The route to C was checked against §206.2.4, and the result came out as it did because
+    “no route from the exterior through doors that could comply”. To move forward, review the
+    route and the listed exceptions the check did not evaluate.
+  label: null
+  note: null
+- id: 5
+  plan: narrow
+  finding: 2
+  rule: ada2010.door-clear-width
+  verdict: fail
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: ed0232e652e14c629357018a90864a321518b5484a6106bbf6a32f9e194b10d0
+  cited:
+  - 404.2.3
+  text: The clear width of D was measured against the minimum in §404.2.3, and the modelled
+    width falls short of 32 in (812.8 mm). To resolve it, review “clear width as modelled” and
+    consider the exceptions the check did not evaluate.
+  label: null
+  note: null
+- id: 6
+  plan: narrow
+  finding: 3
+  rule: ada2010.door-maneuvering-clearance
+  verdict: fail
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 33206dd070aba1d837192879077101b6827325098c797e4d4e11ebe6ef2013dd
+  cited:
+  - 404.2.4
+  - 404.2.4.1
+  text: 'The front-approach clearance beside the latch on the pull side of D was checked under
+    §404.2.4.1, and the measured depth falls short of what the table requires. The check''s
+    note reads: “front approach assumed; short on pull-side depth 801 mm, pull-side latch clearance
+    0 mm”. To resolve it, the designer can look at the side-approach clearances in §404.2.4.1
+    or check whether an exception in §404.2.4 applies.'
+  label: null
+  note: null
+- id: 7
+  plan: narrow
+  finding: 5
+  rule: ada2010.walking-surface-clear-width
+  verdict: fail
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: c8967c6a66a928cdc56a4331c20e09cbf6154f65cb25c2371a0d8a7c593dc7c4
+  cited:
+  - 403.5.1
+  text: The clear width of C was checked against §403.5.1, and the narrow run in the width profile
+    is what makes the result come out as it does. To see the measured and required values, compare
+    minimum clear width 800 mm (31.50 in) ± 0 mm (≥ 36 in); narrow run 1 length 5000 mm (196.85
+    in) ± 0 mm (≤ 24 in) with 36 in (914.4 mm), and review “event-exact transverse width profile;
+    narrow run 5000 mm” before deciding how to widen the route.
+  label: null
+  note: null
+- id: 8
+  plan: sample-office
+  finding: 1
+  rule: ada2010.accessible-route
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: c49ebdf788abe515a42e6d00b91ccf88737f3f67118e80d28edd8ccbf3ec177d
+  cited:
+  - 206.2.4
+  text: The route from the exterior to R01 was checked against §206.2.4, but the check can only
+    prove a failure and found none, so the result stays open. Review “check can only prove fail
+    only; route from the exterior through D08, D07” and confirm the route's level changes and
+    any listed exceptions.
+  label: null
+  note: null
+- id: 9
+  plan: sample-office
+  finding: 3
+  rule: ada2010.accessible-route
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: ddb128fae833466b9ce113a05a901df7eec9b57106d86b9ee111854ac227d813
+  cited:
+  - 206.2.4
+  text: The route from the exterior to R03 was checked against §206.2.4, but the check can only
+    prove a failure and found none, so the result stays open. Review “check can only prove fail
+    only; route from the exterior through D08, D07, D03” and confirm the route, including any
+    level changes and listed exceptions, before relying on it.
+  label: null
+  note: null
+- id: 10
+  plan: sample-office
+  finding: 5
+  rule: ada2010.accessible-route
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 1ce7edfa1c4cfb0695e0f943e91e8cdf7fe197222196011d9187c92dad74c5d4
+  cited:
+  - 206.2.4
+  text: The route from the exterior to R05 was checked against §206.2.4, but the check can only
+    prove a failure and found none, so the result stays open. Review “check can only prove fail
+    only; route from the exterior through D08, D07, D05, D02” and confirm the route, including
+    any level changes and listed exceptions, before relying on this.
+  label: null
+  note: null
+- id: 11
+  plan: sample-office
+  finding: 6
+  rule: ada2010.accessible-route
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 9b90c116baf2704e76896da3d17148c3a0dd428730baff7b9975a9e8e1902f04
+  cited:
+  - 206.2.4
+  text: The route from the exterior to R06 was checked against §206.2.4, but the check can only
+    prove a failure and found none, so the result stays open. Review “check can only prove fail
+    only; route from the exterior through D08” and confirm the route, including any level changes
+    and listed exceptions, before relying on it.
+  label: null
+  note: null
+- id: 12
+  plan: sample-office
+  finding: 7
+  rule: ada2010.accessible-route
+  verdict: borderline
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 29e6fbbdf101aaab5769c9b156deeb235695cee4d9481c4129ad4ea25e74488f
+  cited:
+  - 206.2.4
+  text: The route to R07 was checked under §206.2.4, and the result depends on other elements
+    rather than on R07 itself, so it stays borderline until those are confirmed. The check's
+    note reads “route from the exterior through D08, D01”; confirm the route elements it names,
+    and review the level-changes and listed-exceptions it did not evaluate.
+  label: null
+  note: null
+- id: 13
+  plan: sample-office
+  finding: 8
+  rule: ada2010.door-clear-width
+  verdict: borderline
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 5e5d9154992e7a32ee5a99c7881305e7ae8f44bda8a2eba77a461125e1cad8aa
+  cited:
+  - 404.2.3
+  text: The clear width of D01 was checked against 32 in (812.8 mm) under §404.2.3, and the
+    modelled value 815 mm (32.09 in) ± 5 mm sits within measurement uncertainty of that requirement,
+    so the outcome cannot be settled from the model alone. Confirm the clear width on site,
+    and note that the alteration latch-stop exception was not evaluated.
+  label: null
+  note: null
+- id: 14
+  plan: sample-office
+  finding: 11
+  rule: ada2010.door-clear-width
+  verdict: fail
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 9c6196be5af88865135c7b2be5a989b4a130e45d4cf43ae5e7274906078b338f
+  cited:
+  - 404.2.3
+  text: The clear width of D04 was measured as 710 mm (27.95 in) ± 0 mm against the minimum
+    in §404.2.3, and it came out short. To resolve this, review the modelled opening and consider
+    whether the alteration-latch-stop exception applies, since the check did not evaluate it.
+  label: null
+  note: null
+- id: 15
+  plan: sample-office
+  finding: 24
+  rule: ada2010.door-maneuvering-clearance
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: 71bc59195409f02a8547ff25d8b0ed44ab9d32f957c217bf349aa7424f24afd4
+  cited:
+  - 404.2.4.1
+  text: The front-approach maneuvering clearance at D01 was checked under §404.2.4.1, but the
+    result is unknown because this check can only prove a failure and found none. Review “check
+    can only prove fail only; front approach assumed; clear of walls and modelled fixtures”
+    and confirm the approach direction and hardware assumptions before relying on this result.
+  label: null
+  note: null
+- id: 16
+  plan: sample-office
+  finding: 41
+  rule: ada2010.toilet-room-turning-space
+  verdict: unknown
+  model: deepseek/deepseek-v4.1-flash-1017
+  prompt_hash: c6d57764580512e53bf52d83fd1af89cec8f23b3abdcefe7b22726c7da29413a
+  cited:
+  - 603.2.1
+  text: 'The check looked for a turning space in R02 under §603.2.1, but could not settle the
+    result because it can only prove a failure and fixtures are not modelled. The note: “check
+    can only prove fail only; largest circle 3100 mm; T-shape pass; fits as a circle; no fixtures
+    modelled”. To get a settled answer, the designer can model the fixtures or confirm the scoping
+    exceptions apply.'
+  label: null
+  note: null

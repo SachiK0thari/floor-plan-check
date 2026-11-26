@@ -30,5 +30,9 @@ One row per dataset. The author downloads gated or licence-restricted data; Clau
   of them are drawn onto that image. Wall, door, window, space and railing groups hold their
   polygon directly; fixed furniture holds a local polygon in a `BoundaryPolygon` group, placed by
   the group transforms.
+- **Derived files on Kaggle.** The masks archive is the private output of the prep kernel. One
+  training checkpoint is stored as the private dataset `sachikothari/plancheck-seg-checkpoint`
+  (CC BY-NC-SA 4.0, created 2026-11-24 to resume a stopped run; it can be deleted once the run has
+  finished).
 - **No dataset files in the repository or in tests.** Tests use hand-written SVGs in the same
   layout.
