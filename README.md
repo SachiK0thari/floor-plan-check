@@ -35,7 +35,7 @@ Every figure here comes from a file in [eval/reports/](eval/reports/) or [traini
 - Only seven provisions of the 2010 ADA Standards are checked, and their rule files have not been signed off by the author against the source text.
 - Reading scanned or ordinary drawings is not built: inputs must follow the semantic DXF or tagged-PDF convention. The segmentation model is the first step toward it.
 - Local building codes cannot be run yet; no jurisdiction's adopted code is verified.
-- The web page has been checked by screenshot, not by clicking through it in a browser.
+- The web page was clicked through in headless Chrome by a one-off script; there are no automated browser tests yet, and plan shapes cannot be reached with the keyboard.
 
 ## Setup
 
